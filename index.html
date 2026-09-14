@@ -122,6 +122,14 @@
       font-weight: 800;
     }
 
+    .action-icon {
+      min-width: 44px;
+      min-height: 38px;
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+    }
+
     .primary {
       background: var(--accent);
       border-color: #ffb36c;
@@ -440,7 +448,7 @@
 
     .swatches {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(7, 1fr);
       gap: 8px;
     }
 
@@ -452,6 +460,13 @@
     .swatch.active {
       outline: 2px solid var(--text);
       outline-offset: 2px;
+    }
+
+    input[type="color"].swatch {
+      width: 100%;
+      padding: 2px;
+      background: #11161b;
+      cursor: pointer;
     }
 
     .preset-actions {
@@ -682,7 +697,6 @@
       <div class="top-actions">
         <input class="file-input" id="fileInput" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
         <button class="primary" id="importBtn" type="button"><i data-lucide="image-plus"></i> Import</button>
-        <button class="ghost icon-btn" id="installAppBtn" type="button" title="Install app" aria-label="Install app"><i data-lucide="plus"></i></button>
         <button class="ghost" id="exportBtn" type="button"><i data-lucide="download"></i> Export</button>
       </div>
     </header>
@@ -705,9 +719,9 @@
       <section class="look-strip" id="lookStrip" aria-label="Film filters"></section>
 
       <section class="edit-actions" aria-label="Edit actions">
-        <button id="undoBtn" type="button">Undo</button>
-        <button id="redoBtn" type="button">Redo</button>
-        <button id="resetAllBtn" type="button">Reset All</button>
+        <button class="action-icon" id="undoBtn" type="button" aria-label="Undo" title="Undo"><i data-lucide="undo-2"></i></button>
+        <button class="action-icon" id="redoBtn" type="button" aria-label="Redo" title="Redo"><i data-lucide="redo-2"></i></button>
+        <button class="action-icon" id="resetAllBtn" type="button" aria-label="Reset all" title="Reset all"><i data-lucide="rotate-ccw"></i></button>
       </section>
 
       <nav class="tabs" aria-label="Control tabs">
@@ -718,8 +732,8 @@
 
       <section class="panel active" id="adjustPanel">
         <div class="quick-actions">
-          <button id="randomLookBtn" type="button">Random Look</button>
-          <button id="resetLookBtn" type="button">Reset Adjust</button>
+          <button class="action-icon" id="randomLookBtn" type="button" aria-label="Random look" title="Random look"><i data-lucide="shuffle"></i></button>
+          <button class="action-icon" id="resetLookBtn" type="button" aria-label="Reset adjustments" title="Reset adjustments"><i data-lucide="rotate-ccw"></i></button>
         </div>
         <div class="sliders" id="sliderList"></div>
       </section>
@@ -768,18 +782,18 @@
             </div>
           </div>
           <div class="swatches" id="stampSwatches"></div>
-          <div class="template-grid" aria-label="Stamp Templates">
-            <button class="stamp-template" data-template="date" type="button">DATE ONLY</button>
-            <button class="stamp-template" data-template="film" type="button">DATE + FILM FOTO</button>
-            <button class="stamp-template" data-template="y2k" type="button">Y2K CAM</button>
-            <button class="stamp-template" data-template="place" type="button">DATE + PLACE</button>
-          </div>
           <div class="field">
-            <label for="stampColor">Custom Color</label>
-            <input class="text-input" id="stampColor" type="color" value="#ff6600">
+            <label for="stampStyle">Stamp Style</label>
+            <select id="stampStyle">
+              <option value="date">Date Only</option>
+              <option value="film">Date + FILM FOTO</option>
+              <option value="y2k">Y2K CAM</option>
+              <option value="place">Date + Place</option>
+              <option value="text">Text Only</option>
+            </select>
           </div>
           <div class="sliders" id="stampSliders"></div>
-          <button id="resetStampBtn" type="button">Reset Stamp</button>
+          <button class="action-icon" id="resetStampBtn" type="button" aria-label="Reset date stamp" title="Reset date stamp"><i data-lucide="rotate-ccw"></i></button>
         </div>
       </section>
 
@@ -828,7 +842,6 @@
     const fileInput = document.getElementById("fileInput");
     const importBtn = document.getElementById("importBtn");
     const emptyImportBtn = document.getElementById("emptyImportBtn");
-    const installAppBtn = document.getElementById("installAppBtn");
     const installTip = document.getElementById("installTip");
     const exportBtn = document.getElementById("exportBtn");
     const previewCanvas = document.getElementById("previewCanvas");
@@ -850,7 +863,7 @@
     const stampFont = document.getElementById("stampFont");
     const stampFontSample = document.getElementById("stampFontSample");
     const stampText = document.getElementById("stampText");
-    const stampColor = document.getElementById("stampColor");
+    const stampStyle = document.getElementById("stampStyle");
     const stampSwatches = document.getElementById("stampSwatches");
     const presetSelect = document.getElementById("presetSelect");
     const presetNameInput = document.getElementById("presetNameInput");
@@ -868,7 +881,6 @@
     const toast = document.getElementById("toast");
 
     const ctx = previewCanvas.getContext("2d", { willReadFrequently: true });
-    let deferredInstallPrompt = null;
     const undoStack = [];
     const redoStack = [];
     const sourceCanvas = document.createElement("canvas");
@@ -1032,6 +1044,7 @@
       stampFont: "classic",
       stampText: "",
       stampColor: "#ff6600",
+      stampStyle: "date",
       exportQuality: readStorage(EXPORT_QUALITY_KEY) || "maximum",
       activeCategory: readStorage(LOOK_CATEGORY_KEY) || "all",
       controls: Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value])),
@@ -1108,6 +1121,7 @@
         stampFont: "classic",
         stampText: "",
         stampColor: "#ff6600",
+        stampStyle: "date",
         exportQuality: "maximum",
         activeCategory: state.activeCategory,
         controls: Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value])),
@@ -1294,6 +1308,18 @@
         });
         stampSwatches.appendChild(button);
       }
+      const custom = document.createElement("input");
+      custom.type = "color";
+      custom.className = `swatch${recommendedStampColors.includes(state.stampColor.toLowerCase()) ? "" : " active"}`;
+      custom.value = state.stampColor;
+      custom.title = "Custom color";
+      custom.setAttribute("aria-label", "Custom stamp color");
+      custom.addEventListener("input", () => {
+        commitStateChange(() => {
+          state.stampColor = custom.value;
+        });
+      });
+      stampSwatches.appendChild(custom);
     }
 
     function renderTabs() {
@@ -1392,6 +1418,7 @@
     }
 
     function stampDateText() {
+      if (state.stampStyle === "text") return state.stampText.trim().toUpperCase() || "FILM FOTO";
       const now = new Date();
       let year = now.getFullYear();
       if (state.stampYear === "random90s") year = Number(state.randomRetroYear);
@@ -1532,6 +1559,7 @@
         stampFont: state.stampFont,
         stampText: state.stampText,
         stampColor: state.stampColor,
+        stampStyle: state.stampStyle,
         exportQuality: state.exportQuality,
         activeCategory: state.activeCategory,
         controls: { ...state.controls },
@@ -1683,6 +1711,7 @@
         stampFont: ["classic", "marker", "cake", "courier", "petal"].includes(settings.stampFont) ? settings.stampFont : settings.stampFont === "pixel" ? "courier" : "classic",
         stampText: settings.stampText || "",
         stampColor: settings.stampColor || "#ff6600",
+        stampStyle: ["date", "film", "y2k", "place", "text"].includes(settings.stampStyle) ? settings.stampStyle : "date",
         exportQuality: settings.exportQuality || (Number(settings.jpegQuality) <= .84 ? "low" : Number(settings.jpegQuality) <= .94 ? "medium" : "maximum"),
         activeCategory: settings.activeCategory || readStorage(LOOK_CATEGORY_KEY) || "all",
       });
@@ -1741,30 +1770,13 @@
       stampFont.value = state.stampFont;
       syncStampFontSample();
       stampText.value = state.stampText;
-      stampColor.value = state.stampColor;
+      stampStyle.value = state.stampStyle;
       refreshIcons();
     }
 
     importBtn.addEventListener("click", () => fileInput.click());
     emptyImportBtn.addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", event => loadImage(event.target.files[0]));
-
-    window.addEventListener("beforeinstallprompt", event => {
-      event.preventDefault();
-      deferredInstallPrompt = event;
-      installTip.textContent = "Install ready. Tap + to add FILM FOTO as an app.";
-    });
-
-    installAppBtn.addEventListener("click", async () => {
-      if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        await deferredInstallPrompt.userChoice.catch(() => null);
-        deferredInstallPrompt = null;
-        installTip.textContent = "Install handled. You can still use Share > Add to Home Screen on iPhone.";
-        return;
-      }
-      installTip.textContent = "iPhone: tap Share, then Add to Home Screen. Android: browser menu, then Install app.";
-    });
 
     function openExportSheet() {
       if (!state.imageLoaded) {
@@ -1913,6 +1925,7 @@
         state.stampFont = "classic";
         state.stampText = "";
         state.stampColor = "#ff6600";
+        state.stampStyle = "date";
         state.stamp = Object.fromEntries(stampControlDefs.map(([key, , , , value]) => [key, value]));
       });
     });
@@ -1954,26 +1967,20 @@
       });
     });
 
-    stampColor.addEventListener("input", () => {
+    stampStyle.addEventListener("change", () => {
       commitStateChange(() => {
-        state.stampColor = stampColor.value;
+        const style = stampStyle.value;
+        state.stampStyle = style;
+        state.stampEnabled = true;
+        state.stampPosition = "bottom-right";
+        state.stampYear = style === "y2k" ? "1999" : "current";
+        state.stampFont = style === "y2k" ? "courier" : "classic";
+        state.stampColor = style === "y2k" ? "#66e6ff" : "#ff6600";
+        state.stamp.stampOpacity = style === "date" ? 30 : 94;
+        state.stamp.stampGlow = style === "y2k" ? 22 : 4;
+        state.stampText = { date: "", film: "FILM FOTO", y2k: "Y2K CAM", place: "BKK", text: state.stampText || "FILM FOTO" }[style] || "";
       });
-    });
-
-    document.querySelectorAll(".stamp-template").forEach(button => {
-      button.addEventListener("click", () => {
-        commitStateChange(() => {
-          const template = button.dataset.template;
-          state.stampEnabled = true;
-          state.stampPosition = "bottom-right";
-          state.stampYear = template === "y2k" ? "1999" : "current";
-          state.stampFont = template === "y2k" ? "courier" : "classic";
-          state.stampColor = template === "y2k" ? "#66e6ff" : "#ff6600";
-          state.stamp.stampOpacity = template === "date" ? 88 : 94;
-          state.stamp.stampGlow = template === "y2k" ? 22 : 14;
-          state.stampText = { date: "", film: "FILM FOTO", y2k: "Y2K CAM", place: "BKK" }[template] || "";
-        });
-      });
+      ensureStampFont().then(renderImage);
     });
 
     savePresetBtn.addEventListener("click", () => {
