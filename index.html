@@ -12,6 +12,7 @@
   <link rel="icon" href="logo.png">
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="manifest" href='data:application/manifest+json,{"name":"FILM FOTO","short_name":"FOTO LAB","description":"Retro film simulation editor with local presets and date stamps.","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#101316","theme_color":"#101316","orientation":"portrait","icons":[{"src":"logo.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <title>FILM FOTO</title>
   <style>
     :root {
@@ -118,13 +119,6 @@
       font-weight: 800;
     }
 
-    .quality-select {
-      width: 82px;
-      min-height: 44px;
-      padding: 0 8px;
-      font-size: 12px;
-    }
-
     .primary {
       background: var(--accent);
       border-color: #ffb36c;
@@ -212,23 +206,44 @@
 
     .look-strip {
       display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(116px, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding-bottom: 2px;
     }
 
-    .look-strip::-webkit-scrollbar { display: none; }
+    .look-categories {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .look-categories::-webkit-scrollbar { display: none; }
+
+    .category-tab {
+      flex: 0 0 auto;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .06em;
+    }
+
+    .category-tab.active {
+      color: #1a1008;
+      background: var(--accent);
+      border-color: #ffb36c;
+    }
 
     .look {
       display: grid;
       gap: 3px;
       align-content: center;
-      text-align: left;
-      min-height: 58px;
-      padding: 8px 10px;
+      text-align: center;
+      min-height: 52px;
+      padding: 7px 6px;
       border-color: var(--line);
     }
 
@@ -239,13 +254,15 @@
 
     .look strong {
       font-size: 13px;
-      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .look span {
       font-size: 10px;
       color: var(--muted);
-      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .tabs {
@@ -420,6 +437,54 @@
       gap: 8px;
     }
 
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      align-items: end;
+      background: rgba(0, 0, 0, .62);
+      backdrop-filter: blur(5px);
+    }
+
+    .export-sheet {
+      width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
+      display: grid;
+      gap: 12px;
+      padding: 18px 14px calc(16px + var(--safe-bottom));
+      border: 1px solid rgba(255,255,255,.12);
+      border-bottom: 0;
+      border-radius: 18px 18px 0 0;
+      background: #151a1f;
+      box-shadow: 0 -18px 50px rgba(0,0,0,.35);
+    }
+
+    .sheet-heading { display: grid; gap: 3px; }
+    .sheet-heading strong { font-size: 18px; }
+    .sheet-heading span { color: var(--muted); font-size: 12px; }
+    .export-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .export-option { min-height: 58px; padding: 8px 5px; display: grid; gap: 2px; place-items: center; color: var(--muted); }
+    .export-option strong { color: var(--text); font-size: 13px; }
+    .export-option span { font-size: 10px; }
+    .export-option.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px rgba(255,138,42,.42); }
+    .sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .sheet-actions .cancel { grid-column: 1 / -1; }
+
+    button, .look-categories, .look-strip, .tabs, .edit-actions, .template-grid, .swatches, .top-actions {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+
+    input, textarea, .selectable {
+      -webkit-user-select: text;
+      user-select: text;
+      -webkit-touch-callout: default;
+    }
+
     .history-list {
       display: grid;
       gap: 8px;
@@ -523,9 +588,7 @@
         padding-right: 10px;
       }
 
-      .quality-select {
-        width: 78px;
-      }
+      .look-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
   </style>
 </head>
@@ -538,15 +601,9 @@
       </div>
       <div class="top-actions">
         <input class="file-input" id="fileInput" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
-        <button class="primary" id="importBtn" type="button">Import</button>
-        <button class="ghost icon-btn" id="installAppBtn" type="button" title="Install app">+</button>
-        <select class="quality-select" id="jpegQuality" aria-label="Export Quality">
-          <option value="0.82">Small</option>
-          <option value="0.92" selected>Standard</option>
-          <option value="0.98">Max</option>
-        </select>
-        <button class="ghost" id="shareBtn" type="button">Share</button>
-        <button class="ghost" id="downloadBtn" type="button" aria-label="Save Image">Save</button>
+        <button class="primary" id="importBtn" type="button"><i data-lucide="image-plus"></i> Import</button>
+        <button class="ghost icon-btn" id="installAppBtn" type="button" title="Install app" aria-label="Install app"><i data-lucide="plus"></i></button>
+        <button class="ghost" id="exportBtn" type="button"><i data-lucide="download"></i> Export</button>
       </div>
     </header>
 
@@ -564,6 +621,7 @@
 
     <aside class="controls">
       <div class="install-tip" id="installTip">Add to Home Screen supported. On iPhone: Share > Add to Home Screen.</div>
+      <section class="look-categories" id="lookCategories" aria-label="Film preset categories"></section>
       <section class="look-strip" id="lookStrip" aria-label="Film filters"></section>
 
       <section class="edit-actions" aria-label="Edit actions">
@@ -667,19 +725,33 @@
     </aside>
   </main>
 
+  <div class="sheet-backdrop hidden" id="exportSheet" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+    <section class="export-sheet">
+      <div class="sheet-heading">
+        <strong id="exportTitle">Export Photo</strong>
+        <span id="exportStatus">Choose final quality. Your preview is unchanged.</span>
+      </div>
+      <div class="export-options" id="exportOptions" aria-label="Export quality"></div>
+      <div class="sheet-actions">
+        <button class="primary" id="sheetDownloadBtn" type="button"><i data-lucide="download"></i> Save / Download</button>
+        <button id="sheetShareBtn" type="button"><i data-lucide="share-2"></i> Share</button>
+        <button class="ghost cancel" id="closeExportBtn" type="button">Cancel</button>
+      </div>
+    </section>
+  </div>
+
   <script>
     const fileInput = document.getElementById("fileInput");
     const importBtn = document.getElementById("importBtn");
     const emptyImportBtn = document.getElementById("emptyImportBtn");
     const installAppBtn = document.getElementById("installAppBtn");
     const installTip = document.getElementById("installTip");
-    const shareBtn = document.getElementById("shareBtn");
-    const downloadBtn = document.getElementById("downloadBtn");
-    const jpegQuality = document.getElementById("jpegQuality");
+    const exportBtn = document.getElementById("exportBtn");
     const previewCanvas = document.getElementById("previewCanvas");
     const emptyState = document.getElementById("emptyState");
     const beforeAfterBtn = document.getElementById("beforeAfterBtn");
     const lookStrip = document.getElementById("lookStrip");
+    const lookCategories = document.getElementById("lookCategories");
     const undoBtn = document.getElementById("undoBtn");
     const redoBtn = document.getElementById("redoBtn");
     const resetAllBtn = document.getElementById("resetAllBtn");
@@ -702,6 +774,12 @@
     const renamePresetBtn = document.getElementById("renamePresetBtn");
     const deletePresetBtn = document.getElementById("deletePresetBtn");
     const historyList = document.getElementById("historyList");
+    const exportSheet = document.getElementById("exportSheet");
+    const exportOptions = document.getElementById("exportOptions");
+    const sheetDownloadBtn = document.getElementById("sheetDownloadBtn");
+    const sheetShareBtn = document.getElementById("sheetShareBtn");
+    const closeExportBtn = document.getElementById("closeExportBtn");
+    const exportStatus = document.getElementById("exportStatus");
 
     const ctx = previewCanvas.getContext("2d", { willReadFrequently: true });
     let deferredInstallPrompt = null;
@@ -716,12 +794,15 @@
     const LAST_IMAGE_KEY = "lastImage";
     const HISTORY_KEY = "historyList";
     const LAST_SETTINGS_RECORD = "lastSettings";
+    const LOOK_CATEGORY_KEY = "film-foto-look-category-v1";
+    const EXPORT_QUALITY_KEY = "film-foto-export-quality-v1";
     const fallbackStorage = new Map();
 
     const looks = {
       positive: {
         name: "Positive Film",
         note: "Ricoh Style",
+        category: "film",
         contrast: 24,
         saturation: 26,
         brightness: -8,
@@ -735,6 +816,7 @@
       chrome: {
         name: "Classic Chrome",
         note: "Muted documentary",
+        category: "film",
         contrast: 12,
         saturation: -16,
         brightness: -4,
@@ -748,6 +830,7 @@
       gold: {
         name: "Kodak Gold",
         note: "Warm daylight",
+        category: "film",
         contrast: 8,
         saturation: 18,
         brightness: 5,
@@ -761,6 +844,7 @@
       portra: {
         name: "Portra Soft",
         note: "Skin tone soft",
+        category: "film",
         contrast: -4,
         saturation: 8,
         brightness: 7,
@@ -774,6 +858,7 @@
       trix: {
         name: "Tri-X Mono",
         note: "High contrast B&W",
+        category: "bw",
         contrast: 30,
         saturation: -100,
         brightness: -4,
@@ -784,6 +869,40 @@
         grain: 26,
         vignette: 20,
       },
+      velvia: { name: "Velvia Vivid", note: "Rich color", category: "film", contrast: 20, saturation: 48, brightness: -3, warmth: 2, fade: 0, shadowDepth: 16, highlightRoll: 8, grain: 8, vignette: 12, redShift: 5, greenShift: 7, blueShift: 7 },
+      provia: { name: "Provia Standard", note: "Clean balanced", category: "film", contrast: 10, saturation: 16, brightness: 2, warmth: 1, fade: 2, shadowDepth: 6, highlightRoll: 12, grain: 5, vignette: 5, blueShift: 3 },
+      astia: { name: "Astia Soft", note: "Gentle portraits", category: "film", contrast: -10, saturation: 5, brightness: 8, warmth: 9, fade: 12, shadowDepth: -5, highlightRoll: 24, grain: 5, vignette: 4, redShift: 4 },
+      eterna: { name: "Eterna Cinema", note: "Low contrast cine", category: "cine", contrast: -18, saturation: -17, brightness: -1, warmth: -5, fade: 18, shadowDepth: -8, highlightRoll: 30, grain: 10, vignette: 8, greenShift: 3, blueShift: 5 },
+      ektar: { name: "Ektar Punch", note: "Bold daylight", category: "film", contrast: 24, saturation: 38, brightness: 1, warmth: 8, fade: 0, shadowDepth: 18, highlightRoll: 8, grain: 7, vignette: 12, redShift: 6, blueShift: 4 },
+      colorplus: { name: "ColorPlus Retro", note: "Everyday warmth", category: "film", contrast: 8, saturation: 22, brightness: 4, warmth: 18, fade: 9, shadowDepth: 5, highlightRoll: 13, grain: 14, vignette: 10, redShift: 4 },
+      superia: { name: "Superia Everyday", note: "Fresh casual", category: "film", contrast: 11, saturation: 20, brightness: 3, warmth: -2, fade: 4, shadowDepth: 7, highlightRoll: 12, grain: 12, vignette: 8, greenShift: 5, blueShift: 4 },
+      ultramax: { name: "Ultramax Pop", note: "Bright pop", category: "film", contrast: 19, saturation: 32, brightness: 8, warmth: 11, fade: 2, shadowDepth: 9, highlightRoll: 8, grain: 10, vignette: 7, redShift: 5 },
+      gold200: { name: "Gold 200 Warm", note: "Sunlit gold", category: "film", contrast: 8, saturation: 14, brightness: 8, warmth: 26, fade: 8, shadowDepth: 3, highlightRoll: 16, grain: 12, vignette: 8, redShift: 7, greenShift: 2 },
+      portra400: { name: "Portra 400 Natural", note: "Natural skin", category: "film", contrast: 1, saturation: 9, brightness: 5, warmth: 8, fade: 7, shadowDepth: -2, highlightRoll: 25, grain: 7, vignette: 5, redShift: 3 },
+      portra800: { name: "Portra 800 Night", note: "Soft low light", category: "night", contrast: 5, saturation: 12, brightness: 12, warmth: 12, fade: 13, shadowDepth: -6, highlightRoll: 28, grain: 24, vignette: 13, redShift: 5, blueShift: 3 },
+      cinestill800t: { name: "CineStill 800T", note: "Tungsten glow", category: "night", contrast: 14, saturation: 15, brightness: 3, warmth: -18, fade: 6, shadowDepth: 10, highlightRoll: 18, grain: 22, vignette: 16, redShift: 8, blueShift: 15 },
+      cinestill50d: { name: "CineStill 50D", note: "Clean daylight cine", category: "cine", contrast: 6, saturation: 9, brightness: 5, warmth: -4, fade: 4, shadowDepth: 2, highlightRoll: 18, grain: 4, vignette: 5, blueShift: 4 },
+      kodachrome: { name: "Kodachrome Classic", note: "Deep heritage", category: "film", contrast: 20, saturation: 16, brightness: -4, warmth: 13, fade: 1, shadowDepth: 21, highlightRoll: 7, grain: 15, vignette: 14, redShift: 8, blueShift: -3 },
+      agfa: { name: "Agfa Vista Fresh", note: "Bright fresh", category: "film", contrast: 8, saturation: 25, brightness: 8, warmth: 5, fade: 3, shadowDepth: 4, highlightRoll: 13, grain: 7, vignette: 5, greenShift: 6 },
+      faded90s: { name: "Faded 90s", note: "Warm nostalgic", category: "retro", contrast: -13, saturation: -8, brightness: 9, warmth: 20, fade: 30, shadowDepth: -13, highlightRoll: 24, grain: 18, vignette: 7, redShift: 5 },
+      dusty: { name: "Dusty Vintage", note: "Muted old print", category: "retro", contrast: -8, saturation: -23, brightness: 3, warmth: 15, fade: 25, shadowDepth: -10, highlightRoll: 23, grain: 28, vignette: 18, redShift: 4, greenShift: -2 },
+      desert: { name: "Desert Warm", note: "Dry golden sun", category: "retro", contrast: 11, saturation: 4, brightness: 9, warmth: 34, fade: 11, shadowDepth: 8, highlightRoll: 17, grain: 9, vignette: 10, redShift: 8, blueShift: -7 },
+      tokyo: { name: "Tokyo Night", note: "Cool urban glow", category: "night", contrast: 18, saturation: 10, brightness: -4, warmth: -29, fade: 6, shadowDepth: 18, highlightRoll: 12, grain: 18, vignette: 22, blueShift: 16, greenShift: 4 },
+      neon: { name: "Neon Street", note: "Electric contrast", category: "night", contrast: 28, saturation: 43, brightness: -3, warmth: -8, fade: 0, shadowDepth: 22, highlightRoll: 7, grain: 14, vignette: 25, redShift: 10, blueShift: 14 },
+      moodygreen: { name: "Moody Green", note: "Muted verdant", category: "cine", contrast: 8, saturation: -19, brightness: -7, warmth: -12, fade: 13, shadowDepth: 15, highlightRoll: 18, grain: 13, vignette: 18, greenShift: 12, redShift: -5 },
+      tealorange: { name: "Teal Orange", note: "Cinematic balance", category: "cine", contrast: 21, saturation: 15, brightness: 0, warmth: -7, fade: 4, shadowDepth: 13, highlightRoll: 13, grain: 8, vignette: 13, redShift: 10, blueShift: 10, greenShift: -5 },
+      pastel: { name: "Pastel Dream", note: "Soft airy color", category: "retro", contrast: -22, saturation: -8, brightness: 16, warmth: 10, fade: 23, shadowDepth: -14, highlightRoll: 30, grain: 3, vignette: 3, redShift: 4, blueShift: 5 },
+      matte: { name: "Soft Matte", note: "Lifted black", category: "retro", contrast: -15, saturation: -12, brightness: 5, warmth: 3, fade: 35, shadowDepth: -15, highlightRoll: 21, grain: 8, vignette: 7, greenShift: 2 },
+      hp5: { name: "Ilford HP5", note: "Grainy B&W", category: "bw", contrast: 22, saturation: -100, brightness: -3, warmth: 0, fade: 3, shadowDepth: 16, highlightRoll: 9, grain: 35, vignette: 18 },
+    };
+
+    const presetCategories = [
+      ["all", "ALL"], ["film", "FILM"], ["cine", "CINE"], ["retro", "RETRO"], ["night", "NIGHT"], ["bw", "B&W"],
+    ];
+    const exportQualities = {
+      maximum: { label: "Maximum", note: "Best detail", quality: .98, scale: 1 },
+      medium: { label: "Medium", note: "Balanced", quality: .85, scale: .78 },
+      low: { label: "Low", note: "Smaller file", quality: .70, scale: .55 },
     };
 
     const controlDefs = [
@@ -826,7 +945,8 @@
       stampFont: "classic",
       stampText: "",
       stampColor: "#ff6600",
-      jpegQuality: 0.92,
+      exportQuality: readStorage(EXPORT_QUALITY_KEY) || "maximum",
+      activeCategory: readStorage(LOOK_CATEGORY_KEY) || "all",
       controls: Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value])),
       stamp: Object.fromEntries(stampControlDefs.map(([key, , , , value]) => [key, value])),
     };
@@ -901,7 +1021,8 @@
         stampFont: "classic",
         stampText: "",
         stampColor: "#ff6600",
-        jpegQuality: 0.92,
+        exportQuality: "maximum",
+        activeCategory: state.activeCategory,
         controls: Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value])),
         stamp: Object.fromEntries(stampControlDefs.map(([key, , , , value]) => [key, value])),
       };
@@ -918,6 +1039,27 @@
       return values;
     }
 
+    function refreshIcons() {
+      if (window.lucide) window.lucide.createIcons({ attrs: { "stroke-width": 1.8, width: 17, height: 17 } });
+    }
+
+    function renderPresetCategories() {
+      lookCategories.innerHTML = "";
+      for (const [id, label] of presetCategories) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `category-tab${state.activeCategory === id ? " active" : ""}`;
+        button.textContent = label;
+        button.addEventListener("click", () => {
+          state.activeCategory = id;
+          writeStorage(LOOK_CATEGORY_KEY, id);
+          renderPresetCategories();
+          renderLooks();
+        });
+        lookCategories.appendChild(button);
+      }
+    }
+
     function stampFontFamily() {
       if (state.stampFont === "pixel") return '"Courier New", "Lucida Console", ui-monospace, monospace';
       if (state.stampFont === "lcd") return '"Arial Narrow", "DIN Condensed", "Roboto Condensed", Arial, sans-serif';
@@ -926,7 +1068,7 @@
 
     function renderLooks() {
       lookStrip.innerHTML = "";
-      for (const [key, look] of Object.entries(looks)) {
+      for (const [key, look] of Object.entries(looks).filter(([, look]) => state.activeCategory === "all" || look.category === state.activeCategory)) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = `look${key === state.activeLook ? " active" : ""}`;
@@ -1068,7 +1210,11 @@
         g = lerp(g, 36 + g * 0.88, fade);
         b = lerp(b, 39 + b * 0.88, fade);
 
-        if (state.activeLook === "trix") {
+        r += look.redShift || 0;
+        g += look.greenShift || 0;
+        b += look.blueShift || 0;
+
+        if (looks[state.activeLook].category === "bw") {
           const mono = 0.32 * r + 0.48 * g + 0.2 * b;
           r = g = b = mono;
         }
@@ -1166,9 +1312,28 @@
       return `FILM-FOTO-${looks[state.activeLook].name.replace(/\s+/g, "-").toLowerCase()}-${stamp}.jpg`;
     }
 
-    function canvasToBlob() {
-      return new Promise(resolve => {
-        previewCanvas.toBlob(blob => resolve(blob), "image/jpeg", state.jpegQuality);
+    function getExportSettings() {
+      return exportQualities[state.exportQuality] || exportQualities.maximum;
+    }
+
+    function renderFinalImage() {
+      const options = getExportSettings();
+      const finalCanvas = document.createElement("canvas");
+      finalCanvas.width = Math.max(1, Math.round(sourceCanvas.width * options.scale));
+      finalCanvas.height = Math.max(1, Math.round(sourceCanvas.height * options.scale));
+      const finalCtx = finalCanvas.getContext("2d", { willReadFrequently: true });
+      finalCtx.drawImage(sourceCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
+      const imageData = finalCtx.getImageData(0, 0, finalCanvas.width, finalCanvas.height);
+      finalCtx.putImageData(applyFilm(imageData), 0, 0);
+      drawDateStamp(finalCtx, finalCanvas.width, finalCanvas.height);
+      return finalCanvas;
+    }
+
+    function createExportBlob() {
+      const options = getExportSettings();
+      const finalCanvas = renderFinalImage();
+      return new Promise((resolve, reject) => {
+        finalCanvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Could not create image file")), "image/jpeg", options.quality);
       });
     }
 
@@ -1218,7 +1383,8 @@
         stampFont: state.stampFont,
         stampText: state.stampText,
         stampColor: state.stampColor,
-        jpegQuality: state.jpegQuality,
+        exportQuality: state.exportQuality,
+        activeCategory: state.activeCategory,
         controls: { ...state.controls },
         stamp: { ...state.stamp },
       };
@@ -1368,12 +1534,14 @@
         stampFont: settings.stampFont || "classic",
         stampText: settings.stampText || "",
         stampColor: settings.stampColor || "#ff6600",
-        jpegQuality: Number(settings.jpegQuality || 0.92),
+        exportQuality: settings.exportQuality || (Number(settings.jpegQuality) <= .84 ? "low" : Number(settings.jpegQuality) <= .94 ? "medium" : "maximum"),
+        activeCategory: settings.activeCategory || readStorage(LOOK_CATEGORY_KEY) || "all",
       });
       Object.assign(state.controls, settings.controls || {});
       Object.assign(state.stamp, settings.stamp || {});
       syncFormFromState();
       renderLooks();
+      renderPresetCategories();
       renderControls();
       renderSwatches();
       renderImage();
@@ -1422,7 +1590,7 @@
       stampFont.value = state.stampFont;
       stampText.value = state.stampText;
       stampColor.value = state.stampColor;
-      jpegQuality.value = String(state.jpegQuality);
+      refreshIcons();
     }
 
     importBtn.addEventListener("click", () => fileInput.click());
@@ -1446,13 +1614,46 @@
       installTip.textContent = "iPhone: tap Share, then Add to Home Screen. Android: browser menu, then Install app.";
     });
 
-    async function saveProcessedImage() {
+    function openExportSheet() {
       if (!state.imageLoaded) {
         fileInput.click();
         return;
       }
-      renderImage();
-      const blob = await canvasToBlob();
+      renderExportOptions();
+      exportStatus.textContent = "Choose final quality. Your preview is unchanged.";
+      exportSheet.classList.remove("hidden");
+      refreshIcons();
+    }
+
+    function closeExportSheet() {
+      exportSheet.classList.add("hidden");
+    }
+
+    function reportExportError(error) {
+      console.warn("Export failed", error);
+      exportStatus.textContent = "Could not create the photo file. Please try again.";
+    }
+
+    function renderExportOptions() {
+      exportOptions.innerHTML = "";
+      for (const [id, option] of Object.entries(exportQualities)) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `export-option${state.exportQuality === id ? " active" : ""}`;
+        button.innerHTML = `<strong>${option.label}</strong><span>${option.note}</span>`;
+        button.addEventListener("click", () => {
+          state.exportQuality = id;
+          writeStorage(EXPORT_QUALITY_KEY, id);
+          saveLastSession();
+          renderExportOptions();
+        });
+        exportOptions.appendChild(button);
+      }
+    }
+
+    async function downloadImage() {
+      if (!state.imageLoaded) return openExportSheet();
+      const blob = await createExportBlob();
       const link = document.createElement("a");
       link.download = processedFileName();
       link.href = URL.createObjectURL(blob);
@@ -1460,32 +1661,41 @@
       setTimeout(() => URL.revokeObjectURL(link.href), 1200);
     }
 
-    async function shareProcessedImage() {
-      if (!state.imageLoaded) {
-        fileInput.click();
-        return;
-      }
-      renderImage();
-      const blob = await canvasToBlob();
+    async function shareImage() {
+      if (!state.imageLoaded) return openExportSheet();
+      const blob = await createExportBlob();
       const file = new File([blob], processedFileName(), { type: "image/jpeg" });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          title: "FILM FOTO",
-          text: "Save this FILM FOTO image to Photos.",
-          files: [file],
-        }).catch(() => null);
+        try {
+          await navigator.share({ title: "FOTO LAB", files: [file] });
+        } catch (error) {
+          if (error?.name !== "AbortError") console.warn("Could not share image", error);
+        }
         return;
       }
-      await saveProcessedImage();
+      await downloadImage();
     }
 
-    downloadBtn.addEventListener("click", saveProcessedImage);
-    shareBtn.addEventListener("click", shareProcessedImage);
-
-    jpegQuality.addEventListener("change", () => {
-      commitStateChange(() => {
-        state.jpegQuality = Number(jpegQuality.value);
-      });
+    exportBtn.addEventListener("click", openExportSheet);
+    closeExportBtn.addEventListener("click", closeExportSheet);
+    sheetDownloadBtn.addEventListener("click", async () => {
+      try {
+        await downloadImage();
+        closeExportSheet();
+      } catch (error) {
+        reportExportError(error);
+      }
+    });
+    sheetShareBtn.addEventListener("click", async () => {
+      try {
+        await shareImage();
+        closeExportSheet();
+      } catch (error) {
+        reportExportError(error);
+      }
+    });
+    exportSheet.addEventListener("click", event => {
+      if (event.target === exportSheet) closeExportSheet();
     });
 
     beforeAfterBtn.addEventListener("pointerdown", event => {
@@ -1661,6 +1871,7 @@
     });
 
     renderTabs();
+    renderPresetCategories();
     renderLooks();
     renderControls();
     renderSwatches();
@@ -1668,6 +1879,7 @@
       syncFormFromState();
       restoreLastSession();
       updateEditButtons();
+    window.addEventListener("load", refreshIcons, { once: true });
   </script>
 </body>
 </html>
