@@ -4,6 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#101316">
+  <meta name="description" content="FILM FOTO is a mobile-first retro film simulation editor with local presets and digital date stamps.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FILM FOTO">
+  <link rel="icon" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="manifest" href='data:application/manifest+json,{"name":"FILM FOTO","short_name":"FOTO LAB","description":"Retro film simulation editor with local presets and date stamps.","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#101316","theme_color":"#101316","orientation":"portrait","icons":[{"src":"logo.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
   <title>FILM FOTO</title>
   <style>
     :root {
@@ -68,7 +76,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 8px;
       padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 10px;
       background: color-mix(in srgb, var(--bg) 88%, transparent);
       backdrop-filter: blur(18px);
@@ -84,6 +92,7 @@
       font-size: 18px;
       line-height: 1;
       font-weight: 850;
+      white-space: nowrap;
     }
 
     .brand span {
@@ -95,6 +104,19 @@
     .top-actions {
       display: flex;
       gap: 8px;
+    }
+
+    .icon-btn {
+      min-width: 44px;
+      padding: 0 10px;
+      font-weight: 800;
+    }
+
+    .quality-select {
+      width: 82px;
+      min-height: 44px;
+      padding: 0 8px;
+      font-size: 12px;
     }
 
     .primary {
@@ -110,11 +132,7 @@
     }
 
     .file-input {
-      position: absolute;
-      inline-size: 1px;
-      block-size: 1px;
-      opacity: 0;
-      pointer-events: none;
+      display: none;
     }
 
     .stage {
@@ -125,6 +143,7 @@
     }
 
     .preview-wrap {
+      position: relative;
       width: 100%;
       height: 100%;
       min-height: 280px;
@@ -159,6 +178,17 @@
       padding: 28px;
       text-align: center;
       color: var(--muted);
+    }
+
+    .compare-btn {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      z-index: 2;
+      min-height: 38px;
+      padding: 0 12px;
+      background: rgba(17, 22, 27, .78);
+      backdrop-filter: blur(12px);
     }
 
     .empty-state b {
@@ -273,6 +303,12 @@
       gap: 10px;
     }
 
+    .quick-actions, .template-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
     .switch-row {
       display: flex;
       align-items: center;
@@ -356,8 +392,39 @@
 
     .preset-actions {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      padding: 6px;
+    }
+
+    .history-thumb {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 6px;
+      background: #0b0d0f;
+    }
+
+    .history-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .danger {
@@ -374,6 +441,13 @@
 
     .hidden {
       display: none;
+    }
+
+    .install-tip {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      text-align: center;
     }
 
     @media (min-width: 860px) {
@@ -401,6 +475,34 @@
         overflow-y: auto;
       }
     }
+
+    @media (max-width: 460px) {
+      .topbar {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .brand strong {
+        font-size: 13px;
+      }
+
+      .brand span {
+        display: none;
+      }
+
+      .top-actions {
+        gap: 6px;
+      }
+
+      .primary, .ghost {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .quality-select {
+        width: 78px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -413,6 +515,12 @@
       <div class="top-actions">
         <input class="file-input" id="fileInput" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
         <button class="primary" id="importBtn" type="button">Import</button>
+        <button class="ghost icon-btn" id="installAppBtn" type="button" title="Install app">+</button>
+        <select class="quality-select" id="jpegQuality" aria-label="Export Quality">
+          <option value="0.82">Small</option>
+          <option value="0.92" selected>Standard</option>
+          <option value="0.98">Max</option>
+        </select>
         <button class="ghost" id="downloadBtn" type="button">Download</button>
       </div>
     </header>
@@ -425,10 +533,12 @@
           <button class="primary" id="emptyImportBtn" type="button">Import Photo</button>
         </div>
         <canvas class="hidden" id="previewCanvas"></canvas>
+        <button class="compare-btn hidden" id="beforeAfterBtn" type="button">Before / After Hold</button>
       </div>
     </section>
 
     <aside class="controls">
+      <div class="install-tip" id="installTip">Add to Home Screen supported. On iPhone: Share > Add to Home Screen.</div>
       <section class="look-strip" id="lookStrip" aria-label="Film filters"></section>
 
       <nav class="tabs" aria-label="Control tabs">
@@ -438,6 +548,10 @@
       </nav>
 
       <section class="panel active" id="adjustPanel">
+        <div class="quick-actions">
+          <button id="randomLookBtn" type="button">Random Look</button>
+          <button id="resetLookBtn" type="button">Reset Look</button>
+        </div>
         <div class="sliders" id="sliderList"></div>
       </section>
 
@@ -474,6 +588,12 @@
             </div>
           </div>
           <div class="swatches" id="stampSwatches"></div>
+          <div class="template-grid" aria-label="Stamp Templates">
+            <button class="stamp-template" data-template="date" type="button">DATE ONLY</button>
+            <button class="stamp-template" data-template="film" type="button">DATE + FILM FOTO</button>
+            <button class="stamp-template" data-template="y2k" type="button">Y2K CAM</button>
+            <button class="stamp-template" data-template="place" type="button">DATE + PLACE</button>
+          </div>
           <div class="field">
             <label for="stampColor">Custom Color</label>
             <input class="text-input" id="stampColor" type="color" value="#ff6600">
@@ -488,10 +608,19 @@
             <label for="presetSelect">Saved Presets</label>
             <select id="presetSelect"></select>
           </div>
+          <div class="field">
+            <label for="presetNameInput">Preset Name</label>
+            <input class="text-input" id="presetNameInput" type="text" maxlength="32" placeholder="Positive Film Custom">
+          </div>
           <div class="preset-actions">
             <button id="savePresetBtn" type="button">Save Preset</button>
+            <button id="favoritePresetBtn" type="button">Favorite Presets</button>
             <button id="renamePresetBtn" type="button">Rename</button>
             <button class="danger" id="deletePresetBtn" type="button">Delete</button>
+          </div>
+          <div class="field">
+            <label>History</label>
+            <div class="history-list" id="historyList"></div>
           </div>
         </div>
       </section>
@@ -502,11 +631,17 @@
     const fileInput = document.getElementById("fileInput");
     const importBtn = document.getElementById("importBtn");
     const emptyImportBtn = document.getElementById("emptyImportBtn");
+    const installAppBtn = document.getElementById("installAppBtn");
+    const installTip = document.getElementById("installTip");
     const downloadBtn = document.getElementById("downloadBtn");
+    const jpegQuality = document.getElementById("jpegQuality");
     const previewCanvas = document.getElementById("previewCanvas");
     const emptyState = document.getElementById("emptyState");
+    const beforeAfterBtn = document.getElementById("beforeAfterBtn");
     const lookStrip = document.getElementById("lookStrip");
     const sliderList = document.getElementById("sliderList");
+    const randomLookBtn = document.getElementById("randomLookBtn");
+    const resetLookBtn = document.getElementById("resetLookBtn");
     const stampSliders = document.getElementById("stampSliders");
     const stampToggle = document.getElementById("stampToggle");
     const stampPosition = document.getElementById("stampPosition");
@@ -515,11 +650,15 @@
     const stampColor = document.getElementById("stampColor");
     const stampSwatches = document.getElementById("stampSwatches");
     const presetSelect = document.getElementById("presetSelect");
+    const presetNameInput = document.getElementById("presetNameInput");
     const savePresetBtn = document.getElementById("savePresetBtn");
+    const favoritePresetBtn = document.getElementById("favoritePresetBtn");
     const renamePresetBtn = document.getElementById("renamePresetBtn");
     const deletePresetBtn = document.getElementById("deletePresetBtn");
+    const historyList = document.getElementById("historyList");
 
     const ctx = previewCanvas.getContext("2d", { willReadFrequently: true });
+    let deferredInstallPrompt = null;
     const sourceCanvas = document.createElement("canvas");
     const sourceCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
     const STORE_KEY = "film-foto-presets-v1";
@@ -527,6 +666,7 @@
     const FILM_FOTO_DB = "FILM_FOTO_DB";
     const MEMORY_STORE = "memory";
     const LAST_IMAGE_KEY = "lastImage";
+    const HISTORY_KEY = "historyList";
     const LAST_SETTINGS_RECORD = "lastSettings";
     const fallbackStorage = new Map();
 
@@ -637,6 +777,7 @@
       stampYear: "current",
       stampText: "",
       stampColor: "#ff6600",
+      jpegQuality: 0.92,
       controls: Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value])),
       stamp: Object.fromEntries(stampControlDefs.map(([key, , , , value]) => [key, value])),
     };
@@ -890,6 +1031,13 @@
       drawDateStamp(ctx, previewCanvas.width, previewCanvas.height);
     }
 
+    function renderBeforeImage() {
+      if (!state.imageLoaded) return;
+      previewCanvas.width = sourceCanvas.width;
+      previewCanvas.height = sourceCanvas.height;
+      ctx.drawImage(sourceCanvas, 0, 0);
+    }
+
     function showLoadedImage(img) {
       sourceCanvas.width = img.naturalWidth;
       sourceCanvas.height = img.naturalHeight;
@@ -897,6 +1045,7 @@
       sourceCtx.drawImage(img, 0, 0);
       state.imageLoaded = true;
       previewCanvas.classList.remove("hidden");
+      beforeAfterBtn.classList.remove("hidden");
       emptyState.classList.add("hidden");
       renderImage();
     }
@@ -919,6 +1068,7 @@
       reader.onload = event => {
         loadImageFromDataUrl(event.target.result).then(() => {
           saveLastImage(file);
+          saveHistoryImage(file);
           saveLastSession();
         });
       };
@@ -933,6 +1083,7 @@
         stampYear: state.stampYear,
         stampText: state.stampText,
         stampColor: state.stampColor,
+        jpegQuality: state.jpegQuality,
         controls: { ...state.controls },
         stamp: { ...state.stamp },
       };
@@ -1009,6 +1160,50 @@
       }
     }
 
+    async function saveHistoryImage(file) {
+      try {
+        const existing = await getMemoryRecord(HISTORY_KEY).catch(() => []) || [];
+        const item = {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+          name: file.name || "Imported photo",
+          type: file.type,
+          updatedAt: new Date().toISOString(),
+          blob: file,
+        };
+        await setMemoryRecord(HISTORY_KEY, [item, ...existing].slice(0, 5));
+        renderHistoryList();
+      } catch (error) {
+        console.warn("Could not save history image", error);
+      }
+    }
+
+    async function renderHistoryList() {
+      historyList.innerHTML = "";
+      let items = [];
+      try {
+        items = await getMemoryRecord(HISTORY_KEY) || [];
+      } catch {
+        items = [];
+      }
+      if (!items.length) {
+        const empty = document.createElement("span");
+        empty.textContent = "No recent photos";
+        historyList.appendChild(empty);
+        return;
+      }
+      for (const item of items.slice(0, 5)) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "history-item";
+        const url = URL.createObjectURL(item.blob);
+        button.innerHTML = `<img class="history-thumb" src="${url}" alt=""><span>${item.name}</span>`;
+        button.addEventListener("click", () => {
+          loadImageFromDataUrl(url).then(saveLastSession);
+        });
+        historyList.appendChild(button);
+      }
+    }
+
     async function restoreLastSession() {
       try {
         const raw = readStorage(LAST_SETTINGS_KEY);
@@ -1023,6 +1218,7 @@
           reader.onload = event => loadImageFromDataUrl(event.target.result);
           reader.readAsDataURL(lastImage.blob);
         }
+        renderHistoryList();
       } catch (error) {
         console.warn("Could not restore last session", error);
       }
@@ -1036,6 +1232,7 @@
         stampYear: settings.stampYear || "current",
         stampText: settings.stampText || "",
         stampColor: settings.stampColor || "#ff6600",
+        jpegQuality: Number(settings.jpegQuality || 0.92),
       });
       Object.assign(state.controls, settings.controls || {});
       Object.assign(state.stamp, settings.stamp || {});
@@ -1070,10 +1267,10 @@
         presetSelect.appendChild(option);
         return;
       }
-      for (const preset of presets) {
+      for (const preset of [...presets].sort((a, b) => Number(b.favorite) - Number(a.favorite))) {
         const option = document.createElement("option");
         option.value = preset.id;
-        option.textContent = preset.name;
+        option.textContent = `${preset.favorite ? "★ " : ""}${preset.name}`;
         presetSelect.appendChild(option);
       }
     }
@@ -1088,11 +1285,29 @@
       stampYear.value = state.stampYear;
       stampText.value = state.stampText;
       stampColor.value = state.stampColor;
+      jpegQuality.value = String(state.jpegQuality);
     }
 
     importBtn.addEventListener("click", () => fileInput.click());
     emptyImportBtn.addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", event => loadImage(event.target.files[0]));
+
+    window.addEventListener("beforeinstallprompt", event => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      installTip.textContent = "Install ready. Tap + to add FILM FOTO as an app.";
+    });
+
+    installAppBtn.addEventListener("click", async () => {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice.catch(() => null);
+        deferredInstallPrompt = null;
+        installTip.textContent = "Install handled. You can still use Share > Add to Home Screen on iPhone.";
+        return;
+      }
+      installTip.textContent = "iPhone: tap Share, then Add to Home Screen. Android: browser menu, then Install app.";
+    });
 
     downloadBtn.addEventListener("click", () => {
       if (!state.imageLoaded) {
@@ -1102,8 +1317,49 @@
       renderImage();
       const link = document.createElement("a");
       link.download = `film-foto-${Date.now()}.jpg`;
-      link.href = previewCanvas.toDataURL("image/jpeg", 0.95);
+      link.href = previewCanvas.toDataURL("image/jpeg", state.jpegQuality);
       link.click();
+    });
+
+    jpegQuality.addEventListener("change", () => {
+      state.jpegQuality = Number(jpegQuality.value);
+      saveLastSession();
+    });
+
+    beforeAfterBtn.addEventListener("pointerdown", event => {
+      event.preventDefault();
+      beforeAfterBtn.textContent = "Before";
+      renderBeforeImage();
+    });
+
+    ["pointerup", "pointerleave", "pointercancel"].forEach(eventName => {
+      beforeAfterBtn.addEventListener(eventName, () => {
+        beforeAfterBtn.textContent = "Before / After Hold";
+        renderImage();
+      });
+    });
+
+    randomLookBtn.addEventListener("click", () => {
+      const keys = Object.keys(looks);
+      state.activeLook = keys[Math.floor(Math.random() * keys.length)];
+      for (const [key, , min, max] of controlDefs) {
+        if (key === "strength") {
+          state.controls[key] = 70 + Math.floor(Math.random() * 91);
+        } else {
+          state.controls[key] = Math.round((min + Math.random() * (max - min)) * 0.42);
+        }
+      }
+      renderLooks();
+      renderControls();
+      renderImage();
+      saveLastSession();
+    });
+
+    resetLookBtn.addEventListener("click", () => {
+      state.controls = Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value]));
+      renderControls();
+      renderImage();
+      saveLastSession();
     });
 
     stampToggle.addEventListener("click", () => {
@@ -1141,13 +1397,32 @@
       saveLastSession();
     });
 
+    document.querySelectorAll(".stamp-template").forEach(button => {
+      button.addEventListener("click", () => {
+        const template = button.dataset.template;
+        state.stampEnabled = true;
+        state.stampPosition = "bottom-right";
+        state.stampYear = template === "y2k" ? "1999" : "current";
+        state.stampColor = template === "y2k" ? "#66e6ff" : "#ff6600";
+        state.stamp.stampOpacity = template === "date" ? 88 : 94;
+        state.stamp.stampGlow = template === "y2k" ? 22 : 14;
+        state.stampText = { date: "", film: "FILM FOTO", y2k: "Y2K CAM", place: "BKK" }[template] || "";
+        syncFormFromState();
+        renderControls();
+        renderSwatches();
+        renderImage();
+        saveLastSession();
+      });
+    });
+
     savePresetBtn.addEventListener("click", () => {
-      const name = prompt("Preset name", `${looks[state.activeLook].name} Custom`);
+      const name = presetNameInput.value.trim() || `${looks[state.activeLook].name} Custom`;
       if (!name) return;
       const presets = getPresets();
       const preset = {
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         name: name.trim(),
+        favorite: false,
         settings: snapshotSettings(),
       };
       presets.push(preset);
@@ -1156,15 +1431,26 @@
       saveLastSession();
     });
 
+    favoritePresetBtn.addEventListener("click", () => {
+      const preset = selectedPreset();
+      if (!preset) return;
+      const presets = getPresets().map(item => item.id === preset.id ? { ...item, favorite: !item.favorite } : item);
+      setPresets(presets);
+      presetSelect.value = preset.id;
+    });
+
     presetSelect.addEventListener("change", () => {
       const preset = selectedPreset();
-      if (preset) applySettings(preset.settings);
+      if (preset) {
+        presetNameInput.value = preset.name;
+        applySettings(preset.settings);
+      }
     });
 
     renamePresetBtn.addEventListener("click", () => {
       const preset = selectedPreset();
       if (!preset) return;
-      const name = prompt("Rename preset", preset.name);
+      const name = presetNameInput.value.trim();
       if (!name) return;
       const presets = getPresets().map(item => item.id === preset.id ? { ...item, name: name.trim() } : item);
       setPresets(presets);
