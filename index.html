@@ -450,6 +450,23 @@
       gap: 8px;
     }
 
+    .preset-actions button, .field-label-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .field-label-icon {
+      justify-content: flex-start;
+    }
+
+    .preset-actions button.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(255,138,42,.35);
+    }
+
     .sheet-backdrop {
       position: fixed;
       inset: 0;
@@ -715,7 +732,7 @@
       <section class="panel" id="presetPanel">
         <div class="preset-grid">
           <div class="field">
-            <label for="presetSelect">Saved Presets</label>
+            <label class="field-label-icon" for="presetSelect"><i data-lucide="library"></i> Saved Presets</label>
             <select id="presetSelect"></select>
           </div>
           <div class="field">
@@ -723,13 +740,13 @@
             <input class="text-input" id="presetNameInput" type="text" maxlength="32" placeholder="Positive Film Custom">
           </div>
           <div class="preset-actions">
-            <button id="savePresetBtn" type="button">Save Preset</button>
-            <button id="favoritePresetBtn" type="button">Favorite Presets</button>
-            <button id="renamePresetBtn" type="button">Rename</button>
-            <button class="danger" id="deletePresetBtn" type="button">Delete</button>
+            <button id="savePresetBtn" type="button"><i data-lucide="save"></i> Save Preset</button>
+            <button id="favoritePresetBtn" type="button"><i data-lucide="star"></i> Favorite Presets</button>
+            <button id="renamePresetBtn" type="button"><i data-lucide="pencil"></i> Rename</button>
+            <button class="danger" id="deletePresetBtn" type="button"><i data-lucide="trash-2"></i> Delete</button>
           </div>
           <div class="field">
-            <label>History</label>
+            <label class="field-label-icon"><i data-lucide="history"></i> History</label>
             <div class="history-list" id="historyList"></div>
           </div>
         </div>
@@ -1592,6 +1609,8 @@
         option.textContent = `${preset.favorite ? "★ " : ""}${preset.name}`;
         presetSelect.appendChild(option);
       }
+      const activePreset = selectedPreset();
+      favoritePresetBtn.classList.toggle("active", Boolean(activePreset?.favorite));
     }
 
     function selectedPreset() {
@@ -1848,6 +1867,7 @@
       presets.push(preset);
       setPresets(presets);
       presetSelect.value = preset.id;
+      favoritePresetBtn.classList.remove("active");
       saveLastSession();
     });
 
@@ -1857,12 +1877,14 @@
       const presets = getPresets().map(item => item.id === preset.id ? { ...item, favorite: !item.favorite } : item);
       setPresets(presets);
       presetSelect.value = preset.id;
+      favoritePresetBtn.classList.toggle("active", !preset.favorite);
     });
 
     presetSelect.addEventListener("change", () => {
       const preset = selectedPreset();
       if (preset) {
         presetNameInput.value = preset.name;
+        favoritePresetBtn.classList.toggle("active", Boolean(preset.favorite));
         pushUndoState();
         applySettings(preset.settings);
         updateEditButtons();
@@ -1883,6 +1905,7 @@
       const preset = selectedPreset();
       if (!preset || !confirm(`Delete "${preset.name}"?`)) return;
       setPresets(getPresets().filter(item => item.id !== preset.id));
+      favoritePresetBtn.classList.remove("active");
     });
 
     renderTabs();
