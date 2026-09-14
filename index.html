@@ -122,6 +122,17 @@
       font-weight: 800;
     }
 
+    .language-btn {
+      min-width: 44px;
+      padding: 0 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
     .action-icon {
       min-width: 44px;
       min-height: 38px;
@@ -717,8 +728,9 @@
       </div>
       <div class="top-actions">
         <input class="file-input" id="fileInput" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
-        <button class="primary" id="importBtn" type="button"><i data-lucide="image-plus"></i> Import</button>
-        <button class="ghost" id="exportBtn" type="button"><i data-lucide="download"></i> Export</button>
+        <button class="primary" id="importBtn" type="button"><i data-lucide="image-plus"></i><span data-i18n="import">Import</span></button>
+        <button class="ghost" id="exportBtn" type="button"><i data-lucide="download"></i><span data-i18n="export">Export</span></button>
+        <button class="ghost language-btn" id="languageBtn" type="button" aria-label="Switch language" title="Switch language"><i data-lucide="languages"></i><span id="languageLabel">TH</span></button>
       </div>
     </header>
 
@@ -735,19 +747,19 @@
     </section>
 
     <aside class="controls">
-      <div class="install-tip" id="installTip">Add to Home Screen supported. On iPhone: Share > Add to Home Screen.</div>
+      <div class="install-tip" id="installTip" data-i18n="installTip">Add to Home Screen supported. On iPhone: Share &gt; Add to Home Screen.</div>
       <section class="look-categories" id="lookCategories" aria-label="Film preset categories"></section>
       <section class="look-strip" id="lookStrip" aria-label="Film filters"></section>
 
       <section class="tool-deck" aria-label="Editor tools">
-        <button class="tool-card" id="undoBtn" type="button" aria-label="Undo" title="Undo"><i data-lucide="undo-2"></i><span>Undo</span></button>
-        <button class="tool-card" id="redoBtn" type="button" aria-label="Redo" title="Redo"><i data-lucide="redo-2"></i><span>Redo</span></button>
-        <button class="tool-card" id="randomLookBtn" type="button" aria-label="Random look" title="Random look"><i data-lucide="shuffle"></i><span>Random</span></button>
-        <button class="tool-card" id="resetLookBtn" type="button" aria-label="Reset adjustments" title="Reset adjustments"><i data-lucide="rotate-ccw"></i><span>Reset</span></button>
-        <button class="tool-card" id="resetAllBtn" type="button" aria-label="Reset all" title="Reset all"><i data-lucide="rotate-ccw"></i><span>Reset All</span></button>
-        <button class="tool-card active tab" data-tab="adjust" type="button"><i data-lucide="sliders-horizontal"></i><span>Adjust</span></button>
-        <button class="tool-card tab" data-tab="stamp" type="button"><i data-lucide="calendar-days"></i><span>Date</span></button>
-        <button class="tool-card tab" data-tab="preset" type="button"><i data-lucide="bookmark"></i><span>Preset</span></button>
+        <button class="tool-card" id="undoBtn" type="button" aria-label="Undo" title="Undo"><i data-lucide="undo-2"></i><span data-i18n="undo">Undo</span></button>
+        <button class="tool-card" id="redoBtn" type="button" aria-label="Redo" title="Redo"><i data-lucide="redo-2"></i><span data-i18n="redo">Redo</span></button>
+        <button class="tool-card" id="randomLookBtn" type="button" aria-label="Random look" title="Random look"><i data-lucide="shuffle"></i><span data-i18n="random">Random</span></button>
+        <button class="tool-card" id="resetLookBtn" type="button" aria-label="Reset adjustments" title="Reset adjustments"><i data-lucide="rotate-ccw"></i><span data-i18n="reset">Reset</span></button>
+        <button class="tool-card" id="resetAllBtn" type="button" aria-label="Reset all" title="Reset all"><i data-lucide="rotate-ccw"></i><span data-i18n="resetAll">Reset All</span></button>
+        <button class="tool-card active tab" data-tab="adjust" type="button"><i data-lucide="sliders-horizontal"></i><span data-i18n="adjust">Adjust</span></button>
+        <button class="tool-card tab" data-tab="stamp" type="button"><i data-lucide="calendar-days"></i><span data-i18n="date">Date</span></button>
+        <button class="tool-card tab" data-tab="preset" type="button"><i data-lucide="bookmark"></i><span data-i18n="preset">Preset</span></button>
       </section>
 
       <section class="panel active" id="adjustPanel">
@@ -757,12 +769,12 @@
       <section class="panel" id="stampPanel" data-feature="dateStamp">
         <div class="stamp-grid">
           <div class="switch-row">
-            <span class="toggle-label">Digital Date Stamp</span>
+            <span class="toggle-label" data-i18n="dateStamp">Digital Date Stamp</span>
             <button class="switch on" id="stampToggle" type="button" aria-label="Toggle date stamp"></button>
           </div>
           <div class="form-grid">
             <div class="field">
-              <label for="stampPosition">Position</label>
+              <label for="stampPosition" data-i18n="position">Position</label>
               <select id="stampPosition">
                 <option value="bottom-right">Bottom Right</option>
                 <option value="bottom-left">Bottom Left</option>
@@ -772,7 +784,7 @@
               </select>
             </div>
             <div class="field">
-              <label for="stampYear">Year</label>
+              <label for="stampYear" data-i18n="year">Year</label>
               <select id="stampYear">
                 <option value="current">Current</option>
                 <option value="random90s">Random 90s</option>
@@ -782,7 +794,7 @@
               </select>
             </div>
             <div class="field full">
-              <label for="stampFont">Font</label>
+              <label for="stampFont" data-i18n="font">Font</label>
               <select id="stampFont">
                 <option value="classic">Classic Digital</option>
                 <option value="marker">Marker / Handwritten</option>
@@ -793,13 +805,13 @@
               <div class="font-sample" id="stampFontSample" aria-label="Date font preview">'26 09 14</div>
             </div>
             <div class="field full">
-              <label for="stampText">Custom Text</label>
+              <label for="stampText" data-i18n="customText">Custom Text</label>
               <input class="text-input" id="stampText" type="text" maxlength="28" placeholder="FILM FOTO">
             </div>
           </div>
           <div class="swatches" id="stampSwatches"></div>
           <div class="field">
-            <label for="stampStyle">Stamp Style</label>
+            <label for="stampStyle" data-i18n="stampStyle">Stamp Style</label>
             <select id="stampStyle">
               <option value="date">Date Only</option>
               <option value="film">Date + FILM FOTO</option>
@@ -816,21 +828,21 @@
       <section class="panel" id="presetPanel">
         <div class="preset-grid">
           <div class="field">
-            <label class="field-label-icon" for="presetSelect"><i data-lucide="library"></i> Saved Presets</label>
+            <label class="field-label-icon" for="presetSelect"><i data-lucide="library"></i><span data-i18n="savedPresets">Saved Presets</span></label>
             <select id="presetSelect"></select>
           </div>
           <div class="field">
-            <label for="presetNameInput">Preset Name</label>
+            <label for="presetNameInput" data-i18n="presetName">Preset Name</label>
             <input class="text-input" id="presetNameInput" type="text" maxlength="32" placeholder="Positive Film Custom">
           </div>
           <div class="preset-actions">
-            <button id="savePresetBtn" type="button"><i data-lucide="save"></i> Save Preset</button>
-            <button id="favoritePresetBtn" type="button"><i data-lucide="star"></i> Favorite Presets</button>
-            <button id="renamePresetBtn" type="button"><i data-lucide="pencil"></i> Rename</button>
-            <button class="danger" id="deletePresetBtn" type="button"><i data-lucide="trash-2"></i> Delete</button>
+            <button id="savePresetBtn" type="button"><i data-lucide="save"></i><span data-i18n="savePreset">Save Preset</span></button>
+            <button id="favoritePresetBtn" type="button"><i data-lucide="star"></i><span data-i18n="favoritePresets">Favorite Presets</span></button>
+            <button id="renamePresetBtn" type="button"><i data-lucide="pencil"></i><span data-i18n="rename">Rename</span></button>
+            <button class="danger" id="deletePresetBtn" type="button"><i data-lucide="trash-2"></i><span data-i18n="delete">Delete</span></button>
           </div>
           <div class="field">
-            <label class="field-label-icon"><i data-lucide="history"></i> History</label>
+            <label class="field-label-icon"><i data-lucide="history"></i><span data-i18n="history">History</span></label>
             <div class="history-list" id="historyList"></div>
           </div>
         </div>
@@ -857,6 +869,8 @@
   <script>
     const fileInput = document.getElementById("fileInput");
     const importBtn = document.getElementById("importBtn");
+    const languageBtn = document.getElementById("languageBtn");
+    const languageLabel = document.getElementById("languageLabel");
     const emptyImportBtn = document.getElementById("emptyImportBtn");
     const installTip = document.getElementById("installTip");
     const exportBtn = document.getElementById("exportBtn");
@@ -908,10 +922,33 @@
     const LAST_IMAGE_KEY = "lastImage";
     const HISTORY_KEY = "historyList";
     const LAST_SETTINGS_RECORD = "lastSettings";
+    const LANGUAGE_KEY = "film-foto-language-v1";
     const LOOK_CATEGORY_KEY = "film-foto-look-category-v1";
     const EXPORT_QUALITY_KEY = "film-foto-export-quality-v1";
     const fallbackStorage = new Map();
+    let language = readStorage(LANGUAGE_KEY) === "th" ? "th" : "en";
     let toastTimer = null;
+
+    const translations = {
+      en: {
+        import: "Import", export: "Export", installTip: "Add to Home Screen supported. On iPhone: Share > Add to Home Screen.",
+        undo: "Undo", redo: "Redo", random: "Random", reset: "Reset", resetAll: "Reset All", adjust: "Adjust", date: "Date", preset: "Preset",
+        all: "ALL", film: "FILM", cine: "CINE", retro: "RETRO", night: "NIGHT", bw: "B&W",
+        Strength: "Strength", Contrast: "Contrast", Saturation: "Saturation", Brightness: "Brightness", Warmth: "Warmth", Fade: "Fade", Shadows: "Shadows", Highlights: "Highlights", Grain: "Grain", Vignette: "Vignette",
+        Opacity: "Opacity", Weight: "Weight", Size: "Size", Glow: "Glow", Margin: "Margin",
+        dateStamp: "Digital Date Stamp", position: "Position", year: "Year", font: "Font", customText: "Custom Text", stampStyle: "Stamp Style",
+        savedPresets: "Saved Presets", presetName: "Preset Name", savePreset: "Save Preset", favoritePresets: "Favorite Presets", rename: "Rename", delete: "Delete", history: "History",
+      },
+      th: {
+        import: "นำเข้า", export: "ส่งออก", installTip: "เพิ่มไปยังหน้าจอโฮมได้: iPhone กด Share > Add to Home Screen",
+        undo: "ย้อนกลับ", redo: "ทำซ้ำ", random: "สุ่ม", reset: "รีเซ็ต", resetAll: "รีเซ็ตทั้งหมด", adjust: "ปรับภาพ", date: "วันที่", preset: "พรีเซ็ต",
+        all: "ทั้งหมด", film: "ฟิล์ม", cine: "ภาพยนตร์", retro: "เรโทร", night: "กลางคืน", bw: "ขาวดำ",
+        Strength: "ความเข้ม", Contrast: "คอนทราสต์", Saturation: "สี", Brightness: "ความสว่าง", Warmth: "โทนอุ่น", Fade: "เฟด", Shadows: "เงา", Highlights: "ไฮไลต์", Grain: "เกรน", Vignette: "ขอบมืด",
+        Opacity: "ความทึบ", Weight: "น้ำหนัก", Size: "ขนาด", Glow: "เรืองแสง", Margin: "ระยะขอบ",
+        dateStamp: "วันที่ดิจิทัล", position: "ตำแหน่ง", year: "ปี", font: "ฟอนต์", customText: "ข้อความกำหนดเอง", stampStyle: "รูปแบบข้อความ",
+        savedPresets: "พรีเซ็ตที่บันทึก", presetName: "ชื่อพรีเซ็ต", savePreset: "บันทึกพรีเซ็ต", favoritePresets: "รายการโปรด", rename: "เปลี่ยนชื่อ", delete: "ลบ", history: "ประวัติ",
+      },
+    };
 
     const looks = {
       positive: {
@@ -1096,6 +1133,22 @@
       fallbackStorage.set(key, value);
     }
 
+    function t(key) {
+      return translations[language]?.[key] || key;
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = language;
+      document.querySelectorAll("[data-i18n]").forEach(element => {
+        element.textContent = t(element.dataset.i18n);
+      });
+      languageLabel.textContent = language === "en" ? "TH" : "EN";
+      languageBtn.setAttribute("aria-label", language === "en" ? "เปลี่ยนเป็นภาษาไทย" : "Switch to English");
+      renderPresetCategories();
+      renderControls();
+      refreshIcons();
+    }
+
     function sameSettings(a, b) {
       return JSON.stringify(a) === JSON.stringify(b);
     }
@@ -1166,7 +1219,7 @@
         const button = document.createElement("button");
         button.type = "button";
         button.className = `category-tab${state.activeCategory === id ? " active" : ""}`;
-        button.textContent = label;
+        button.textContent = t(id) || label;
         button.addEventListener("click", () => {
           state.activeCategory = id;
           writeStorage(LOOK_CATEGORY_KEY, id);
@@ -1247,7 +1300,7 @@
       row.className = "row";
       const id = `range-${key}`;
       row.innerHTML = `
-        <label for="${id}">${label}</label>
+        <label for="${id}">${t(label)}</label>
         <button class="step-slider" type="button" aria-label="Decrease ${label}" title="Decrease ${label}">−</button>
         <input id="${id}" type="range" min="${min}" max="${max}" value="${getValue()}">
         <button class="step-slider" type="button" aria-label="Increase ${label}" title="Increase ${label}">+</button>
@@ -1277,6 +1330,8 @@
           event.preventDefault();
           stopRepeat();
           move();
+          window.addEventListener("pointerup", stopRepeat, { once: true });
+          window.addEventListener("pointercancel", stopRepeat, { once: true });
           repeatDelay = setTimeout(() => {
             repeatTimer = setInterval(move, 80);
           }, 400);
@@ -1791,6 +1846,11 @@
     }
 
     importBtn.addEventListener("click", () => fileInput.click());
+    languageBtn.addEventListener("click", () => {
+      language = language === "en" ? "th" : "en";
+      writeStorage(LANGUAGE_KEY, language);
+      applyLanguage();
+    });
     emptyImportBtn.addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", event => loadImage(event.target.files[0]));
 
@@ -2082,6 +2142,7 @@
       syncFormFromState();
       restoreLastSession();
       updateEditButtons();
+    applyLanguage();
     window.addEventListener("load", () => {
       refreshIcons();
       ensureStampFont().then(() => {
