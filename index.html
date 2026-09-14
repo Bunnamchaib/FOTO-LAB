@@ -306,6 +306,27 @@
       font-size: 13px;
     }
 
+    .tool-deck {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .tool-card {
+      min-height: 54px;
+      padding: 5px 3px;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 2px;
+      color: var(--muted);
+    }
+
+    .tool-card .lucide { width: 17px; height: 17px; }
+    .tool-card span { font-size: 9px; line-height: 1.05; white-space: nowrap; }
+    .tool-card.active { color: var(--text); border-color: var(--accent-2); }
+    .tool-card:disabled { color: var(--muted); }
+
     .tab {
       min-height: 38px;
       font-size: 13px;
@@ -568,7 +589,7 @@
     .sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .sheet-actions .cancel { grid-column: 1 / -1; }
 
-    button, .look-categories, .look-strip, .tabs, .edit-actions, .template-grid, .swatches, .top-actions {
+    button, .look-categories, .look-strip, .tabs, .edit-actions, .tool-deck, .template-grid, .swatches, .top-actions {
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
@@ -718,23 +739,18 @@
       <section class="look-categories" id="lookCategories" aria-label="Film preset categories"></section>
       <section class="look-strip" id="lookStrip" aria-label="Film filters"></section>
 
-      <section class="edit-actions" aria-label="Edit actions">
-        <button class="action-icon" id="undoBtn" type="button" aria-label="Undo" title="Undo"><i data-lucide="undo-2"></i></button>
-        <button class="action-icon" id="redoBtn" type="button" aria-label="Redo" title="Redo"><i data-lucide="redo-2"></i></button>
-        <button class="action-icon" id="resetAllBtn" type="button" aria-label="Reset all" title="Reset all"><i data-lucide="rotate-ccw"></i></button>
+      <section class="tool-deck" aria-label="Editor tools">
+        <button class="tool-card" id="undoBtn" type="button" aria-label="Undo" title="Undo"><i data-lucide="undo-2"></i><span>Undo</span></button>
+        <button class="tool-card" id="redoBtn" type="button" aria-label="Redo" title="Redo"><i data-lucide="redo-2"></i><span>Redo</span></button>
+        <button class="tool-card" id="randomLookBtn" type="button" aria-label="Random look" title="Random look"><i data-lucide="shuffle"></i><span>Random</span></button>
+        <button class="tool-card" id="resetLookBtn" type="button" aria-label="Reset adjustments" title="Reset adjustments"><i data-lucide="rotate-ccw"></i><span>Reset</span></button>
+        <button class="tool-card" id="resetAllBtn" type="button" aria-label="Reset all" title="Reset all"><i data-lucide="rotate-ccw"></i><span>Reset All</span></button>
+        <button class="tool-card active tab" data-tab="adjust" type="button"><i data-lucide="sliders-horizontal"></i><span>Adjust</span></button>
+        <button class="tool-card tab" data-tab="stamp" type="button"><i data-lucide="calendar-days"></i><span>Date</span></button>
+        <button class="tool-card tab" data-tab="preset" type="button"><i data-lucide="bookmark"></i><span>Preset</span></button>
       </section>
 
-      <nav class="tabs" aria-label="Control tabs">
-        <button class="tab active" data-tab="adjust" type="button">Adjust</button>
-        <button class="tab" data-tab="stamp" type="button">Date</button>
-        <button class="tab" data-tab="preset" type="button">Preset</button>
-      </nav>
-
       <section class="panel active" id="adjustPanel">
-        <div class="quick-actions">
-          <button class="action-icon" id="randomLookBtn" type="button" aria-label="Random look" title="Random look"><i data-lucide="shuffle"></i></button>
-          <button class="action-icon" id="resetLookBtn" type="button" aria-label="Reset adjustments" title="Reset adjustments"><i data-lucide="rotate-ccw"></i></button>
-        </div>
         <div class="sliders" id="sliderList"></div>
       </section>
 
