@@ -787,11 +787,16 @@
               <label for="stampYear" data-i18n="year">Year</label>
               <select id="stampYear">
                 <option value="current">Current</option>
+                <option value="custom">Custom Date</option>
                 <option value="random90s">Random 90s</option>
                 <option value="1998">1998</option>
                 <option value="1999">1999</option>
                 <option value="2001">2001</option>
               </select>
+            </div>
+            <div class="field full hidden" id="customDateField">
+              <label for="stampCustomDate" data-i18n="customDate">Custom Date</label>
+              <input class="text-input" id="stampCustomDate" type="date">
             </div>
             <div class="field full">
               <label for="stampDateFormat" data-i18n="dateFormat">Date Format</label>
@@ -900,6 +905,8 @@
     const stampToggle = document.getElementById("stampToggle");
     const stampPosition = document.getElementById("stampPosition");
     const stampYear = document.getElementById("stampYear");
+    const stampCustomDate = document.getElementById("stampCustomDate");
+    const customDateField = document.getElementById("customDateField");
     const stampDateFormat = document.getElementById("stampDateFormat");
     const stampFont = document.getElementById("stampFont");
     const stampFontSample = document.getElementById("stampFontSample");
@@ -947,7 +954,7 @@
         all: "ALL", film: "FILM", cine: "CINE", retro: "RETRO", night: "NIGHT", bw: "B&W",
         Strength: "Strength", Contrast: "Contrast", Saturation: "Saturation", Brightness: "Brightness", Warmth: "Warmth", Fade: "Fade", Shadows: "Shadows", Highlights: "Highlights", Grain: "Grain", Vignette: "Vignette",
         Opacity: "Opacity", Weight: "Weight", Size: "Size", Glow: "Glow", Margin: "Margin",
-        dateStamp: "Digital Date Stamp", position: "Position", year: "Year", dateFormat: "Date Format", font: "Font", customText: "Custom Text", stampStyle: "Stamp Style",
+        dateStamp: "Digital Date Stamp", position: "Position", year: "Year", customDate: "Custom Date", dateFormat: "Date Format", font: "Font", customText: "Custom Text", stampStyle: "Stamp Style",
         savedPresets: "Saved Presets", presetName: "Preset Name", savePreset: "Save Preset", favoritePresets: "Favorite Presets", rename: "Rename", delete: "Delete", history: "History",
       },
       th: {
@@ -956,7 +963,7 @@
         all: "ทั้งหมด", film: "ฟิล์ม", cine: "ภาพยนตร์", retro: "เรโทร", night: "กลางคืน", bw: "ขาวดำ",
         Strength: "ความเข้ม", Contrast: "คอนทราสต์", Saturation: "สี", Brightness: "ความสว่าง", Warmth: "โทนอุ่น", Fade: "เฟด", Shadows: "เงา", Highlights: "ไฮไลต์", Grain: "เกรน", Vignette: "ขอบมืด",
         Opacity: "ความทึบ", Weight: "น้ำหนัก", Size: "ขนาด", Glow: "เรืองแสง", Margin: "ระยะขอบ",
-        dateStamp: "วันที่ดิจิทัล", position: "ตำแหน่ง", year: "ปี", dateFormat: "รูปแบบวันที่", font: "ฟอนต์", customText: "ข้อความกำหนดเอง", stampStyle: "รูปแบบข้อความ",
+        dateStamp: "วันที่ดิจิทัล", position: "ตำแหน่ง", year: "ปี", customDate: "กำหนดวันที่เอง", dateFormat: "รูปแบบวันที่", font: "ฟอนต์", customText: "ข้อความกำหนดเอง", stampStyle: "รูปแบบข้อความ",
         savedPresets: "พรีเซ็ตที่บันทึก", presetName: "ชื่อพรีเซ็ต", savePreset: "บันทึกพรีเซ็ต", favoritePresets: "รายการโปรด", rename: "เปลี่ยนชื่อ", delete: "ลบ", history: "ประวัติ",
       },
     };
@@ -1105,6 +1112,7 @@
       stampEnabled: true,
       stampPosition: "bottom-right",
       stampYear: "current",
+      stampCustomDate: "",
       stampDateFormat: "yy-mm-dd",
       stampFont: "classic",
       stampText: "",
@@ -1199,6 +1207,7 @@
         stampEnabled: true,
         stampPosition: "bottom-right",
         stampYear: "current",
+        stampCustomDate: "",
         stampDateFormat: "yy-mm-dd",
         stampFont: "classic",
         stampText: "",
@@ -1505,11 +1514,19 @@
       if (state.stampStyle === "text") return state.stampText.trim().toUpperCase() || "FILM FOTO";
       const now = new Date();
       let year = now.getFullYear();
+      let month = now.getMonth() + 1;
+      let day = now.getDate();
+      if (state.stampYear === "custom" && /^\d{4}-\d{2}-\d{2}$/.test(state.stampCustomDate)) {
+        const [customYear, customMonth, customDay] = state.stampCustomDate.split("-").map(Number);
+        year = customYear;
+        month = customMonth;
+        day = customDay;
+      }
       if (state.stampYear === "random90s") year = Number(state.randomRetroYear);
       if (/^\d{4}$/.test(state.stampYear)) year = Number(state.stampYear);
       const yy = String(year).slice(-2);
-      const mm = String(now.getMonth() + 1).padStart(2, "0");
-      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(month).padStart(2, "0");
+      const dd = String(day).padStart(2, "0");
       const date = {
         "yy-mm-dd": `'${yy} ${mm} ${dd}`,
         "dd-mm-yy": `'${dd} ${mm} ${yy}`,
@@ -1647,6 +1664,7 @@
         stampEnabled: state.stampEnabled,
         stampPosition: state.stampPosition,
         stampYear: state.stampYear,
+        stampCustomDate: state.stampCustomDate,
         stampDateFormat: state.stampDateFormat,
         stampFont: state.stampFont,
         stampText: state.stampText,
@@ -1800,6 +1818,7 @@
         stampEnabled: settings.stampEnabled ?? true,
         stampPosition: settings.stampPosition || "bottom-right",
         stampYear: settings.stampYear || "current",
+        stampCustomDate: /^\d{4}-\d{2}-\d{2}$/.test(settings.stampCustomDate || "") ? settings.stampCustomDate : "",
         stampDateFormat: ["yy-mm-dd", "dd-mm-yy", "dd-mm-yyyy", "yyyy", "thai-year"].includes(settings.stampDateFormat) ? settings.stampDateFormat : "yy-mm-dd",
         stampFont: ["classic", "marker", "cake", "courier", "petal"].includes(settings.stampFont) ? settings.stampFont : settings.stampFont === "pixel" ? "courier" : "classic",
         stampText: settings.stampText || "",
@@ -1860,6 +1879,8 @@
       stampToggle.classList.toggle("on", state.stampEnabled);
       stampPosition.value = state.stampPosition;
       stampYear.value = state.stampYear;
+      stampCustomDate.value = state.stampCustomDate;
+      customDateField.classList.toggle("hidden", state.stampYear !== "custom");
       stampDateFormat.value = state.stampDateFormat;
       stampFont.value = state.stampFont;
       syncStampFontSample();
@@ -2021,6 +2042,7 @@
         state.stampEnabled = true;
         state.stampPosition = "bottom-right";
         state.stampYear = "current";
+        state.stampCustomDate = "";
         state.stampDateFormat = "yy-mm-dd";
         state.stampFont = "classic";
         state.stampText = "";
@@ -2048,6 +2070,13 @@
         if (state.stampYear === "random90s") {
           state.randomRetroYear = String(1990 + Math.floor(Math.random() * 10));
         }
+      });
+    });
+
+    stampCustomDate.addEventListener("change", () => {
+      commitStateChange(() => {
+        state.stampCustomDate = stampCustomDate.value;
+        state.stampYear = "custom";
       });
     });
 
