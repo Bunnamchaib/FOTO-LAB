@@ -63,6 +63,12 @@
       transform: translateY(1px);
     }
 
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .app {
       min-height: 100svh;
       display: grid;
@@ -248,6 +254,17 @@
       gap: 8px;
     }
 
+    .edit-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .edit-actions button {
+      min-height: 38px;
+      font-size: 13px;
+    }
+
     .tab {
       min-height: 38px;
       font-size: 13px;
@@ -275,9 +292,9 @@
 
     .row {
       display: grid;
-      grid-template-columns: 104px minmax(0, 1fr) 42px;
+      grid-template-columns: 84px minmax(0, 1fr) 38px 34px;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       min-height: 34px;
     }
 
@@ -291,6 +308,13 @@
       font-variant-numeric: tabular-nums;
       font-size: 12px;
       text-align: right;
+    }
+
+    .reset-slider {
+      min-height: 30px;
+      padding: 0;
+      font-size: 15px;
+      line-height: 1;
     }
 
     input[type="range"] {
@@ -521,7 +545,8 @@
           <option value="0.92" selected>Standard</option>
           <option value="0.98">Max</option>
         </select>
-        <button class="ghost" id="downloadBtn" type="button">Download</button>
+        <button class="ghost" id="shareBtn" type="button">Share</button>
+        <button class="ghost" id="downloadBtn" type="button" aria-label="Save Image">Save</button>
       </div>
     </header>
 
@@ -541,6 +566,12 @@
       <div class="install-tip" id="installTip">Add to Home Screen supported. On iPhone: Share > Add to Home Screen.</div>
       <section class="look-strip" id="lookStrip" aria-label="Film filters"></section>
 
+      <section class="edit-actions" aria-label="Edit actions">
+        <button id="undoBtn" type="button">Undo</button>
+        <button id="redoBtn" type="button">Redo</button>
+        <button id="resetAllBtn" type="button">Reset All</button>
+      </section>
+
       <nav class="tabs" aria-label="Control tabs">
         <button class="tab active" data-tab="adjust" type="button">Adjust</button>
         <button class="tab" data-tab="stamp" type="button">Date</button>
@@ -550,7 +581,7 @@
       <section class="panel active" id="adjustPanel">
         <div class="quick-actions">
           <button id="randomLookBtn" type="button">Random Look</button>
-          <button id="resetLookBtn" type="button">Reset Look</button>
+          <button id="resetLookBtn" type="button">Reset Adjust</button>
         </div>
         <div class="sliders" id="sliderList"></div>
       </section>
@@ -583,6 +614,14 @@
               </select>
             </div>
             <div class="field full">
+              <label for="stampFont">Font</label>
+              <select id="stampFont">
+                <option value="classic">Classic Digital</option>
+                <option value="pixel">Pixel Mono</option>
+                <option value="lcd">Camera LCD</option>
+              </select>
+            </div>
+            <div class="field full">
               <label for="stampText">Custom Text</label>
               <input class="text-input" id="stampText" type="text" maxlength="28" placeholder="FILM FOTO">
             </div>
@@ -599,6 +638,7 @@
             <input class="text-input" id="stampColor" type="color" value="#ff6600">
           </div>
           <div class="sliders" id="stampSliders"></div>
+          <button id="resetStampBtn" type="button">Reset Stamp</button>
         </div>
       </section>
 
@@ -633,19 +673,25 @@
     const emptyImportBtn = document.getElementById("emptyImportBtn");
     const installAppBtn = document.getElementById("installAppBtn");
     const installTip = document.getElementById("installTip");
+    const shareBtn = document.getElementById("shareBtn");
     const downloadBtn = document.getElementById("downloadBtn");
     const jpegQuality = document.getElementById("jpegQuality");
     const previewCanvas = document.getElementById("previewCanvas");
     const emptyState = document.getElementById("emptyState");
     const beforeAfterBtn = document.getElementById("beforeAfterBtn");
     const lookStrip = document.getElementById("lookStrip");
+    const undoBtn = document.getElementById("undoBtn");
+    const redoBtn = document.getElementById("redoBtn");
+    const resetAllBtn = document.getElementById("resetAllBtn");
     const sliderList = document.getElementById("sliderList");
     const randomLookBtn = document.getElementById("randomLookBtn");
     const resetLookBtn = document.getElementById("resetLookBtn");
+    const resetStampBtn = document.getElementById("resetStampBtn");
     const stampSliders = document.getElementById("stampSliders");
     const stampToggle = document.getElementById("stampToggle");
     const stampPosition = document.getElementById("stampPosition");
     const stampYear = document.getElementById("stampYear");
+    const stampFont = document.getElementById("stampFont");
     const stampText = document.getElementById("stampText");
     const stampColor = document.getElementById("stampColor");
     const stampSwatches = document.getElementById("stampSwatches");
@@ -659,6 +705,8 @@
 
     const ctx = previewCanvas.getContext("2d", { willReadFrequently: true });
     let deferredInstallPrompt = null;
+    const undoStack = [];
+    const redoStack = [];
     const sourceCanvas = document.createElement("canvas");
     const sourceCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
     const STORE_KEY = "film-foto-presets-v1";
@@ -775,6 +823,7 @@
       stampEnabled: true,
       stampPosition: "bottom-right",
       stampYear: "current",
+      stampFont: "classic",
       stampText: "",
       stampColor: "#ff6600",
       jpegQuality: 0.92,
@@ -811,6 +860,53 @@
       fallbackStorage.set(key, value);
     }
 
+    function sameSettings(a, b) {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+
+    function updateEditButtons() {
+      undoBtn.disabled = undoStack.length === 0;
+      redoBtn.disabled = redoStack.length === 0;
+    }
+
+    function pushUndoState() {
+      const snapshot = snapshotSettings();
+      const last = undoStack[undoStack.length - 1];
+      if (!last || !sameSettings(last, snapshot)) {
+        undoStack.push(snapshot);
+        if (undoStack.length > 40) undoStack.shift();
+      }
+      redoStack.length = 0;
+      updateEditButtons();
+    }
+
+    function commitStateChange(change) {
+      pushUndoState();
+      change();
+      renderLooks();
+      renderControls();
+      renderSwatches();
+      syncFormFromState();
+      renderImage();
+      saveLastSession();
+      updateEditButtons();
+    }
+
+    function defaultSettings() {
+      return {
+        activeLook: "positive",
+        stampEnabled: true,
+        stampPosition: "bottom-right",
+        stampYear: "current",
+        stampFont: "classic",
+        stampText: "",
+        stampColor: "#ff6600",
+        jpegQuality: 0.92,
+        controls: Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value])),
+        stamp: Object.fromEntries(stampControlDefs.map(([key, , , , value]) => [key, value])),
+      };
+    }
+
     function currentLookValues() {
       const base = looks[state.activeLook];
       const strength = state.controls.strength / 100;
@@ -822,6 +918,12 @@
       return values;
     }
 
+    function stampFontFamily() {
+      if (state.stampFont === "pixel") return '"Courier New", "Lucida Console", ui-monospace, monospace';
+      if (state.stampFont === "lcd") return '"Arial Narrow", "DIN Condensed", "Roboto Condensed", Arial, sans-serif';
+      return '"Courier New", ui-monospace, monospace';
+    }
+
     function renderLooks() {
       lookStrip.innerHTML = "";
       for (const [key, look] of Object.entries(looks)) {
@@ -830,16 +932,25 @@
         button.className = `look${key === state.activeLook ? " active" : ""}`;
         button.innerHTML = `<strong>${look.name}</strong><span>${look.note}</span>`;
         button.addEventListener("click", () => {
-          state.activeLook = key;
-          renderLooks();
-          renderImage();
-          saveLastSession();
+          commitStateChange(() => {
+            state.activeLook = key;
+          });
         });
         lookStrip.appendChild(button);
       }
     }
 
-    function makeRange(parent, key, label, min, max, getValue, setValue) {
+    function resetControlValue(key) {
+      const def = controlDefs.find(([controlKey]) => controlKey === key);
+      return def ? def[4] : 0;
+    }
+
+    function resetStampValue(key) {
+      const def = stampControlDefs.find(([controlKey]) => controlKey === key);
+      return def ? def[4] : 0;
+    }
+
+    function makeRange(parent, key, label, min, max, getValue, setValue, resetValue) {
       const row = document.createElement("div");
       row.className = "row";
       const id = `range-${key}`;
@@ -847,14 +958,21 @@
         <label for="${id}">${label}</label>
         <input id="${id}" type="range" min="${min}" max="${max}" value="${getValue()}">
         <output>${getValue()}</output>
+        <button class="reset-slider" type="button" aria-label="Reset ${label}" title="Reset ${label}">↺</button>
       `;
       const input = row.querySelector("input");
       const output = row.querySelector("output");
+      const resetSlider = row.querySelector(".reset-slider");
       input.addEventListener("input", () => {
-        setValue(Number(input.value));
+        commitStateChange(() => {
+          setValue(Number(input.value));
+        });
         output.textContent = input.value;
-        renderImage();
-        saveLastSession();
+      });
+      resetSlider.addEventListener("click", () => {
+        commitStateChange(() => {
+          setValue(resetValue);
+        });
       });
       parent.appendChild(row);
     }
@@ -862,12 +980,12 @@
     function renderControls() {
       sliderList.innerHTML = "";
       for (const [key, label, min, max] of controlDefs) {
-        makeRange(sliderList, key, label, min, max, () => state.controls[key], value => state.controls[key] = value);
+        makeRange(sliderList, key, label, min, max, () => state.controls[key], value => state.controls[key] = value, resetControlValue(key));
       }
 
       stampSliders.innerHTML = "";
       for (const [key, label, min, max] of stampControlDefs) {
-        makeRange(stampSliders, key, label, min, max, () => state.stamp[key], value => state.stamp[key] = value);
+        makeRange(stampSliders, key, label, min, max, () => state.stamp[key], value => state.stamp[key] = value, resetStampValue(key));
       }
     }
 
@@ -880,11 +998,9 @@
         button.style.background = color;
         button.title = color;
         button.addEventListener("click", () => {
-          state.stampColor = color;
-          stampColor.value = color;
-          renderSwatches();
-          renderImage();
-          saveLastSession();
+          commitStateChange(() => {
+            state.stampColor = color;
+          });
         });
         stampSwatches.appendChild(button);
       }
@@ -999,7 +1115,7 @@
       const margin = Math.round(state.stamp.stampMargin * (width / previewCanvas.width || 1));
       targetCtx.save();
       targetCtx.globalAlpha = state.stamp.stampOpacity / 100;
-      targetCtx.font = `900 ${size}px "Courier New", ui-monospace, monospace`;
+      targetCtx.font = `900 ${size}px ${stampFontFamily()}`;
       targetCtx.textBaseline = "alphabetic";
       targetCtx.lineWidth = state.stamp.stampWeight;
       targetCtx.strokeStyle = state.stampColor;
@@ -1036,6 +1152,24 @@
       previewCanvas.width = sourceCanvas.width;
       previewCanvas.height = sourceCanvas.height;
       ctx.drawImage(sourceCanvas, 0, 0);
+    }
+
+    function processedFileName() {
+      const now = new Date();
+      const stamp = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, "0"),
+        String(now.getDate()).padStart(2, "0"),
+        String(now.getHours()).padStart(2, "0"),
+        String(now.getMinutes()).padStart(2, "0"),
+      ].join("");
+      return `FILM-FOTO-${looks[state.activeLook].name.replace(/\s+/g, "-").toLowerCase()}-${stamp}.jpg`;
+    }
+
+    function canvasToBlob() {
+      return new Promise(resolve => {
+        previewCanvas.toBlob(blob => resolve(blob), "image/jpeg", state.jpegQuality);
+      });
     }
 
     function showLoadedImage(img) {
@@ -1081,6 +1215,7 @@
         stampEnabled: state.stampEnabled,
         stampPosition: state.stampPosition,
         stampYear: state.stampYear,
+        stampFont: state.stampFont,
         stampText: state.stampText,
         stampColor: state.stampColor,
         jpegQuality: state.jpegQuality,
@@ -1230,6 +1365,7 @@
         stampEnabled: settings.stampEnabled ?? true,
         stampPosition: settings.stampPosition || "bottom-right",
         stampYear: settings.stampYear || "current",
+        stampFont: settings.stampFont || "classic",
         stampText: settings.stampText || "",
         stampColor: settings.stampColor || "#ff6600",
         jpegQuality: Number(settings.jpegQuality || 0.92),
@@ -1283,6 +1419,7 @@
       stampToggle.classList.toggle("on", state.stampEnabled);
       stampPosition.value = state.stampPosition;
       stampYear.value = state.stampYear;
+      stampFont.value = state.stampFont;
       stampText.value = state.stampText;
       stampColor.value = state.stampColor;
       jpegQuality.value = String(state.jpegQuality);
@@ -1309,21 +1446,46 @@
       installTip.textContent = "iPhone: tap Share, then Add to Home Screen. Android: browser menu, then Install app.";
     });
 
-    downloadBtn.addEventListener("click", () => {
+    async function saveProcessedImage() {
       if (!state.imageLoaded) {
         fileInput.click();
         return;
       }
       renderImage();
+      const blob = await canvasToBlob();
       const link = document.createElement("a");
-      link.download = `film-foto-${Date.now()}.jpg`;
-      link.href = previewCanvas.toDataURL("image/jpeg", state.jpegQuality);
+      link.download = processedFileName();
+      link.href = URL.createObjectURL(blob);
       link.click();
-    });
+      setTimeout(() => URL.revokeObjectURL(link.href), 1200);
+    }
+
+    async function shareProcessedImage() {
+      if (!state.imageLoaded) {
+        fileInput.click();
+        return;
+      }
+      renderImage();
+      const blob = await canvasToBlob();
+      const file = new File([blob], processedFileName(), { type: "image/jpeg" });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          title: "FILM FOTO",
+          text: "Save this FILM FOTO image to Photos.",
+          files: [file],
+        }).catch(() => null);
+        return;
+      }
+      await saveProcessedImage();
+    }
+
+    downloadBtn.addEventListener("click", saveProcessedImage);
+    shareBtn.addEventListener("click", shareProcessedImage);
 
     jpegQuality.addEventListener("change", () => {
-      state.jpegQuality = Number(jpegQuality.value);
-      saveLastSession();
+      commitStateChange(() => {
+        state.jpegQuality = Number(jpegQuality.value);
+      });
     });
 
     beforeAfterBtn.addEventListener("pointerdown", event => {
@@ -1339,79 +1501,112 @@
       });
     });
 
+    undoBtn.addEventListener("click", () => {
+      const previous = undoStack.pop();
+      if (!previous) return;
+      redoStack.push(snapshotSettings());
+      applySettings(previous);
+      updateEditButtons();
+    });
+
+    redoBtn.addEventListener("click", () => {
+      const next = redoStack.pop();
+      if (!next) return;
+      undoStack.push(snapshotSettings());
+      applySettings(next);
+      updateEditButtons();
+    });
+
+    resetAllBtn.addEventListener("click", () => {
+      commitStateChange(() => {
+        Object.assign(state, defaultSettings());
+      });
+    });
+
     randomLookBtn.addEventListener("click", () => {
-      const keys = Object.keys(looks);
-      state.activeLook = keys[Math.floor(Math.random() * keys.length)];
-      for (const [key, , min, max] of controlDefs) {
-        if (key === "strength") {
-          state.controls[key] = 70 + Math.floor(Math.random() * 91);
-        } else {
-          state.controls[key] = Math.round((min + Math.random() * (max - min)) * 0.42);
+      commitStateChange(() => {
+        const keys = Object.keys(looks);
+        state.activeLook = keys[Math.floor(Math.random() * keys.length)];
+        for (const [key, , min, max] of controlDefs) {
+          if (key === "strength") {
+            state.controls[key] = 70 + Math.floor(Math.random() * 91);
+          } else {
+            state.controls[key] = Math.round((min + Math.random() * (max - min)) * 0.42);
+          }
         }
-      }
-      renderLooks();
-      renderControls();
-      renderImage();
-      saveLastSession();
+      });
     });
 
     resetLookBtn.addEventListener("click", () => {
-      state.controls = Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value]));
-      renderControls();
-      renderImage();
-      saveLastSession();
+      commitStateChange(() => {
+        state.controls = Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value]));
+      });
+    });
+
+    resetStampBtn.addEventListener("click", () => {
+      commitStateChange(() => {
+        state.stampEnabled = true;
+        state.stampPosition = "bottom-right";
+        state.stampYear = "current";
+        state.stampFont = "classic";
+        state.stampText = "";
+        state.stampColor = "#ff6600";
+        state.stamp = Object.fromEntries(stampControlDefs.map(([key, , , , value]) => [key, value]));
+      });
     });
 
     stampToggle.addEventListener("click", () => {
-      state.stampEnabled = !state.stampEnabled;
-      stampToggle.classList.toggle("on", state.stampEnabled);
-      renderImage();
-      saveLastSession();
+      commitStateChange(() => {
+        state.stampEnabled = !state.stampEnabled;
+      });
     });
 
     stampPosition.addEventListener("change", () => {
-      state.stampPosition = stampPosition.value;
-      renderImage();
-      saveLastSession();
+      commitStateChange(() => {
+        state.stampPosition = stampPosition.value;
+      });
     });
 
     stampYear.addEventListener("change", () => {
-      state.stampYear = stampYear.value;
-      if (state.stampYear === "random90s") {
-        state.randomRetroYear = String(1990 + Math.floor(Math.random() * 10));
-      }
-      renderImage();
-      saveLastSession();
+      commitStateChange(() => {
+        state.stampYear = stampYear.value;
+        if (state.stampYear === "random90s") {
+          state.randomRetroYear = String(1990 + Math.floor(Math.random() * 10));
+        }
+      });
+    });
+
+    stampFont.addEventListener("change", () => {
+      commitStateChange(() => {
+        state.stampFont = stampFont.value;
+      });
     });
 
     stampText.addEventListener("input", () => {
-      state.stampText = stampText.value;
-      renderImage();
-      saveLastSession();
+      commitStateChange(() => {
+        state.stampText = stampText.value;
+      });
     });
 
     stampColor.addEventListener("input", () => {
-      state.stampColor = stampColor.value;
-      renderSwatches();
-      renderImage();
-      saveLastSession();
+      commitStateChange(() => {
+        state.stampColor = stampColor.value;
+      });
     });
 
     document.querySelectorAll(".stamp-template").forEach(button => {
       button.addEventListener("click", () => {
-        const template = button.dataset.template;
-        state.stampEnabled = true;
-        state.stampPosition = "bottom-right";
-        state.stampYear = template === "y2k" ? "1999" : "current";
-        state.stampColor = template === "y2k" ? "#66e6ff" : "#ff6600";
-        state.stamp.stampOpacity = template === "date" ? 88 : 94;
-        state.stamp.stampGlow = template === "y2k" ? 22 : 14;
-        state.stampText = { date: "", film: "FILM FOTO", y2k: "Y2K CAM", place: "BKK" }[template] || "";
-        syncFormFromState();
-        renderControls();
-        renderSwatches();
-        renderImage();
-        saveLastSession();
+        commitStateChange(() => {
+          const template = button.dataset.template;
+          state.stampEnabled = true;
+          state.stampPosition = "bottom-right";
+          state.stampYear = template === "y2k" ? "1999" : "current";
+          state.stampFont = template === "y2k" ? "lcd" : "classic";
+          state.stampColor = template === "y2k" ? "#66e6ff" : "#ff6600";
+          state.stamp.stampOpacity = template === "date" ? 88 : 94;
+          state.stamp.stampGlow = template === "y2k" ? 22 : 14;
+          state.stampText = { date: "", film: "FILM FOTO", y2k: "Y2K CAM", place: "BKK" }[template] || "";
+        });
       });
     });
 
@@ -1443,7 +1638,9 @@
       const preset = selectedPreset();
       if (preset) {
         presetNameInput.value = preset.name;
+        pushUndoState();
         applySettings(preset.settings);
+        updateEditButtons();
       }
     });
 
@@ -1466,10 +1663,11 @@
     renderTabs();
     renderLooks();
     renderControls();
-      renderSwatches();
-      renderPresetOptions();
+    renderSwatches();
+    renderPresetOptions();
       syncFormFromState();
       restoreLastSession();
+      updateEditButtons();
   </script>
 </body>
 </html>
