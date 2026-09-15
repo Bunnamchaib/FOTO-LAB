@@ -160,8 +160,16 @@
     .stage {
       min-height: 0;
       display: grid;
-      place-items: center;
+      grid-template-rows: auto minmax(0, 1fr);
+      align-content: stretch;
+      gap: 8px;
       padding: 12px;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
     }
 
     .preview-wrap {
@@ -805,6 +813,12 @@
     </header>
 
     <section class="stage" aria-label="Image Preview">
+      <section class="quick-actions" aria-label="Quick actions">
+        <button class="tool-card" id="undoBtn" type="button" aria-label="Undo" title="Undo"><i data-lucide="undo-2"></i><span data-i18n="undo">Undo</span></button>
+        <button class="tool-card" id="redoBtn" type="button" aria-label="Redo" title="Redo"><i data-lucide="redo-2"></i><span data-i18n="redo">Redo</span></button>
+        <button class="tool-card" id="randomLookBtn" type="button" aria-label="Random look" title="Random look"><i data-lucide="shuffle"></i><span data-i18n="random">Random</span></button>
+        <button class="tool-card" id="resetLookBtn" type="button" aria-label="Reset adjustments" title="Reset adjustments"><i data-lucide="rotate-ccw"></i><span data-i18n="reset">Reset</span></button>
+      </section>
       <div class="preview-wrap">
         <div class="empty-state" id="emptyState">
           <b>Image Preview</b>
@@ -822,10 +836,6 @@
       <section class="look-strip" id="lookStrip" aria-label="Film filters"></section>
 
       <section class="tool-deck" aria-label="Editor tools">
-        <button class="tool-card" id="undoBtn" type="button" aria-label="Undo" title="Undo"><i data-lucide="undo-2"></i><span data-i18n="undo">Undo</span></button>
-        <button class="tool-card" id="redoBtn" type="button" aria-label="Redo" title="Redo"><i data-lucide="redo-2"></i><span data-i18n="redo">Redo</span></button>
-        <button class="tool-card" id="randomLookBtn" type="button" aria-label="Random look" title="Random look"><i data-lucide="shuffle"></i><span data-i18n="random">Random</span></button>
-        <button class="tool-card" id="resetLookBtn" type="button" aria-label="Reset adjustments" title="Reset adjustments"><i data-lucide="rotate-ccw"></i><span data-i18n="reset">Reset</span></button>
         <button class="tool-card" id="resetAllBtn" type="button" aria-label="Reset all" title="Reset all"><i data-lucide="rotate-ccw"></i><span data-i18n="resetAll">Reset All</span></button>
         <button class="tool-card active tab" data-tab="adjust" type="button"><i data-lucide="sliders-horizontal"></i><span data-i18n="adjust">Adjust</span></button>
         <button class="tool-card tab" data-tab="stamp" type="button"><i data-lucide="calendar-days"></i><span data-i18n="date">Date</span></button>
