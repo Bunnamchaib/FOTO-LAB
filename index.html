@@ -358,6 +358,39 @@
       display: grid;
     }
 
+    .print-entry, .print-section {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+    }
+
+    .print-entry {
+      width: 100%;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      color: var(--text);
+      text-align: left;
+    }
+
+    .print-entry span, .print-summary, .print-note { color: var(--muted); font-size: 11px; }
+    .print-entry strong { font-size: 13px; }
+    .print-entry .entry-main { display: grid; gap: 2px; }
+    .print-entry .lucide { color: var(--accent); }
+    .print-stack { display: grid; gap: 10px; }
+    .print-section { padding: 12px; display: grid; gap: 9px; }
+    .print-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .print-heading strong { font-size: 13px; }
+    .print-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+    .print-option { min-height: 48px; padding: 6px 4px; font-size: 11px; line-height: 1.15; }
+    .print-option.active { color: var(--text); border-color: var(--accent); box-shadow: inset 0 0 0 1px rgba(255,138,42,.42); }
+    .print-crop-controls { display: grid; gap: 7px; }
+    .print-crop-controls .row { grid-template-columns: 76px 30px minmax(0, 1fr) 30px 38px 30px; }
+    .print-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .print-actions button { min-height: 40px; }
+
     .sliders {
       display: grid;
       gap: 8px;
@@ -801,6 +834,45 @@
 
       <section class="panel active" id="adjustPanel">
         <div class="sliders" id="sliderList"></div>
+        <div class="print-section">
+          <div class="print-heading">
+            <strong data-i18n="texture">Texture</strong>
+            <span class="print-summary" id="textureSummary">Off</span>
+          </div>
+          <div class="field">
+            <label for="textureStyle" data-i18n="textureStyle">Style</label>
+            <select id="textureStyle">
+              <option value="off">Off</option>
+              <option value="fine">Fine Grain</option>
+              <option value="dust">Soft Dust</option>
+              <option value="fade">Faded Print</option>
+            </select>
+          </div>
+          <div class="sliders" id="textureSliders"></div>
+        </div>
+        <button class="print-entry" id="openPrintBtn" type="button">
+          <span class="entry-main"><strong data-i18n="printLab">Print Lab</strong><span id="printEntrySummary">Original · No border</span></span>
+          <i data-lucide="crop"></i>
+        </button>
+      </section>
+
+      <section class="panel" id="printPanel">
+        <div class="print-stack">
+          <div class="print-section">
+            <div class="print-heading"><strong data-i18n="printSize">Print Size</strong><span class="print-summary" id="printSizeSummary">Original</span></div>
+            <div class="print-options" id="printSizeOptions"></div>
+            <p class="print-note" id="printPixelNote">Original aspect ratio · no crop</p>
+          </div>
+          <div class="print-section" id="cropSection">
+            <div class="print-heading"><strong data-i18n="crop">Crop</strong><span class="print-summary" data-i18n="cropHint">Centre crop</span></div>
+            <div class="print-crop-controls" id="cropControls"></div>
+            <div class="print-actions"><button id="resetCropBtn" type="button" data-i18n="resetCrop">Reset Crop</button><button class="primary" id="donePrintBtn" type="button" data-i18n="done">Done</button></div>
+          </div>
+          <div class="print-section">
+            <div class="print-heading"><strong data-i18n="filmBorder">Film Border</strong><span class="print-summary" id="borderSummary">None</span></div>
+            <div class="print-options" id="borderOptions"></div>
+          </div>
+        </div>
       </section>
 
       <section class="panel" id="stampPanel" data-feature="dateStamp">
@@ -955,6 +1027,20 @@
     const redoBtn = document.getElementById("redoBtn");
     const resetAllBtn = document.getElementById("resetAllBtn");
     const sliderList = document.getElementById("sliderList");
+    const textureSliders = document.getElementById("textureSliders");
+    const textureStyle = document.getElementById("textureStyle");
+    const textureSummary = document.getElementById("textureSummary");
+    const openPrintBtn = document.getElementById("openPrintBtn");
+    const printEntrySummary = document.getElementById("printEntrySummary");
+    const printSizeOptions = document.getElementById("printSizeOptions");
+    const printSizeSummary = document.getElementById("printSizeSummary");
+    const printPixelNote = document.getElementById("printPixelNote");
+    const cropSection = document.getElementById("cropSection");
+    const cropControls = document.getElementById("cropControls");
+    const resetCropBtn = document.getElementById("resetCropBtn");
+    const donePrintBtn = document.getElementById("donePrintBtn");
+    const borderOptions = document.getElementById("borderOptions");
+    const borderSummary = document.getElementById("borderSummary");
     const randomLookBtn = document.getElementById("randomLookBtn");
     const resetLookBtn = document.getElementById("resetLookBtn");
     const resetStampBtn = document.getElementById("resetStampBtn");
@@ -1013,7 +1099,7 @@
     const translations = {
       en: {
         import: "Import", export: "Export", installTip: "Add to Home Screen supported. On iPhone: Share > Add to Home Screen.",
-        undo: "Undo", redo: "Redo", random: "Random", reset: "Reset", resetAll: "Reset All", adjust: "Adjust", date: "Date", preset: "Preset",
+        undo: "Undo", redo: "Redo", random: "Random", reset: "Reset", resetAll: "Reset All", adjust: "Adjust", date: "Date", preset: "Preset", printLab: "Print Lab", printSize: "Print Size", crop: "Crop", cropHint: "Centre crop", resetCrop: "Reset Crop", done: "Done", filmBorder: "Film Border", texture: "Texture", textureStyle: "Style",
         all: "ALL", film: "FILM", cine: "CINE", retro: "RETRO", night: "NIGHT", bw: "B&W",
         Strength: "Strength", Contrast: "Contrast", Saturation: "Saturation", Brightness: "Brightness", Warmth: "Warmth", Fade: "Fade", Shadows: "Shadows", Highlights: "Highlights", Grain: "Grain", Vignette: "Vignette",
         Opacity: "Opacity", Weight: "Weight", Size: "Size", Glow: "Glow", Margin: "Margin",
@@ -1022,7 +1108,7 @@
       },
       th: {
         import: "นำเข้า", export: "ส่งออก", installTip: "เพิ่มไปยังหน้าจอโฮมได้: iPhone กด Share > Add to Home Screen",
-        undo: "ย้อนกลับ", redo: "ทำซ้ำ", random: "สุ่ม", reset: "รีเซ็ต", resetAll: "รีเซ็ตทั้งหมด", adjust: "ปรับภาพ", date: "วันที่", preset: "พรีเซ็ต",
+        undo: "ย้อนกลับ", redo: "ทำซ้ำ", random: "สุ่ม", reset: "รีเซ็ต", resetAll: "รีเซ็ตทั้งหมด", adjust: "ปรับภาพ", date: "วันที่", preset: "พรีเซ็ต", printLab: "ห้องอัดรูป", printSize: "ขนาดอัดรูป", crop: "ตัดภาพ", cropHint: "ตัดกึ่งกลาง", resetCrop: "รีเซ็ตการตัด", done: "เสร็จ", filmBorder: "ขอบฟิล์ม", texture: "เท็กซ์เจอร์", textureStyle: "รูปแบบ",
         all: "ทั้งหมด", film: "ฟิล์ม", cine: "ภาพยนตร์", retro: "เรโทร", night: "กลางคืน", bw: "ขาวดำ",
         Strength: "ความเข้ม", Contrast: "คอนทราสต์", Saturation: "สี", Brightness: "ความสว่าง", Warmth: "โทนอุ่น", Fade: "เฟด", Shadows: "เงา", Highlights: "ไฮไลต์", Grain: "เกรน", Vignette: "ขอบมืด",
         Opacity: "ความทึบ", Weight: "น้ำหนัก", Size: "ขนาด", Glow: "เรืองแสง", Margin: "ระยะขอบ",
@@ -1179,6 +1265,23 @@
       low: { label: "Low", note: "Smaller file", quality: .70, scale: .55 },
     };
 
+    const printSizes = {
+      original: { label: "Original", ratio: 0 },
+      print4x6: { label: '4 × 6 in', ratio: 2 / 3, shortEdge: 1200 },
+      print5x7: { label: '5 × 7 in', ratio: 5 / 7, shortEdge: 1500 },
+      print8x10: { label: '8 × 10 in', ratio: 4 / 5, shortEdge: 2400 },
+      square: { label: "Square", ratio: 1, shortEdge: 1800 },
+      portrait: { label: "4 : 5", ratio: 4 / 5, shortEdge: 1600 },
+      story: { label: "9 : 16", ratio: 9 / 16, shortEdge: 1080 },
+    };
+    const borderStyles = {
+      none: "None",
+      white: "Clean White",
+      black: "Matte Black",
+      film35: "35mm Frame",
+    };
+    const textureControlDefs = [["textureAmount", "Amount", 0, 100, 28]];
+
     const controlDefs = [
       ["strength", "Strength", 0, 200, 100],
       ["contrast", "Contrast", -60, 80, 0],
@@ -1225,6 +1328,14 @@
       stampText: "",
       stampColor: "#ff6600",
       stampStyle: "date",
+      printSize: "original",
+      cropX: 50,
+      cropY: 50,
+      cropZoom: 100,
+      borderStyle: "none",
+      textureStyle: "off",
+      textureAmount: 28,
+      textureSeed: Math.floor(Math.random() * 1000000),
       exportQuality: readStorage(EXPORT_QUALITY_KEY) || "maximum",
       activeCategory: readStorage(LOOK_CATEGORY_KEY) || "all",
       controls: Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value])),
@@ -1323,6 +1434,14 @@
         stampText: "",
         stampColor: "#ff6600",
         stampStyle: "date",
+        printSize: "original",
+        cropX: 50,
+        cropY: 50,
+        cropZoom: 100,
+        borderStyle: "none",
+        textureStyle: "off",
+        textureAmount: 28,
+        textureSeed: state.textureSeed,
         exportQuality: "maximum",
         activeCategory: state.activeCategory,
         controls: Object.fromEntries(controlDefs.map(([key, , , , value]) => [key, value])),
@@ -1494,6 +1613,57 @@
       for (const [key, label, min, max] of stampControlDefs) {
         makeRange(stampSliders, key, label, min, max, () => state.stamp[key], value => state.stamp[key] = value, resetStampValue(key));
       }
+      textureSliders.innerHTML = "";
+      if (state.textureStyle !== "off") {
+        for (const [key, label, min, max, reset] of textureControlDefs) {
+          makeRange(textureSliders, key, label, min, max, () => state[key], value => state[key] = value, reset);
+        }
+      }
+      renderPrintControls();
+    }
+
+    function printSizeLabel() { return printSizes[state.printSize]?.label || "Original"; }
+    function borderLabel() { return borderStyles[state.borderStyle] || "None"; }
+
+    function renderPrintControls() {
+      textureStyle.value = state.textureStyle;
+      textureSummary.textContent = state.textureStyle === "off" ? "Off" : `${textureStyle.options[textureStyle.selectedIndex].text} · ${state.textureAmount}%`;
+      printEntrySummary.textContent = `${printSizeLabel()} · ${borderLabel()}`;
+      printSizeSummary.textContent = printSizeLabel();
+      borderSummary.textContent = borderLabel();
+      printSizeOptions.innerHTML = "";
+      for (const [id, size] of Object.entries(printSizes)) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `print-option${state.printSize === id ? " active" : ""}`;
+        button.textContent = size.label;
+        button.addEventListener("click", () => commitStateChange(() => {
+          state.printSize = id;
+          state.cropX = 50;
+          state.cropY = 50;
+          state.cropZoom = 100;
+        }));
+        printSizeOptions.appendChild(button);
+      }
+      const dimensions = getPrintDimensions();
+      const isOriginal = state.printSize === "original";
+      cropSection.classList.toggle("hidden", isOriginal);
+      printPixelNote.textContent = isOriginal ? "Original aspect ratio · no crop" : `${dimensions.width} × ${dimensions.height} px · 300 DPI`;
+      cropControls.innerHTML = "";
+      if (!isOriginal) {
+        makeRange(cropControls, "cropX", "Position X", 0, 100, () => state.cropX, value => state.cropX = value, 50);
+        makeRange(cropControls, "cropY", "Position Y", 0, 100, () => state.cropY, value => state.cropY = value, 50);
+        makeRange(cropControls, "cropZoom", "Zoom", 100, 180, () => state.cropZoom, value => state.cropZoom = value, 100);
+      }
+      borderOptions.innerHTML = "";
+      for (const [id, label] of Object.entries(borderStyles)) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `print-option${state.borderStyle === id ? " active" : ""}`;
+        button.textContent = label;
+        button.addEventListener("click", () => commitStateChange(() => { state.borderStyle = id; }));
+        borderOptions.appendChild(button);
+      }
     }
 
     function renderSwatches() {
@@ -1526,14 +1696,17 @@
     }
 
     function renderTabs() {
+      const activatePanel = tabName => {
+        document.querySelectorAll(".tab").forEach(item => item.classList.toggle("active", item.dataset.tab === tabName));
+        document.querySelectorAll(".panel").forEach(item => item.classList.toggle("active", item.id === `${tabName}Panel`));
+      };
       document.querySelectorAll(".tab").forEach(tab => {
         tab.addEventListener("click", () => {
-          document.querySelectorAll(".tab").forEach(item => item.classList.remove("active"));
-          document.querySelectorAll(".panel").forEach(item => item.classList.remove("active"));
-          tab.classList.add("active");
-          document.getElementById(`${tab.dataset.tab}Panel`).classList.add("active");
+          activatePanel(tab.dataset.tab);
         });
       });
+      openPrintBtn.addEventListener("click", () => activatePanel("print"));
+      donePrintBtn.addEventListener("click", () => activatePanel("adjust"));
     }
 
     function applyFilm(imageData) {
@@ -1597,10 +1770,30 @@
         }
 
         if (grain > 0) {
-          const noise = (Math.random() - 0.5) * grain * 1.7;
+          const noise = (seededNoise(x, y, state.textureSeed) - .5) * grain * 1.7;
           r += noise;
           g += noise;
           b += noise;
+        }
+
+        if (state.textureStyle === "fine") {
+          const noise = (seededNoise(x * 1.7, y * 1.7, state.textureSeed + 71) - .5) * state.textureAmount * .72;
+          r += noise;
+          g += noise;
+          b += noise;
+        } else if (state.textureStyle === "dust") {
+          const speck = seededNoise(x * .31, y * .31, state.textureSeed + 141);
+          if (speck > 1 - state.textureAmount / 18000) {
+            const lift = 18 + state.textureAmount * .42;
+            r += lift;
+            g += lift;
+            b += lift;
+          }
+        } else if (state.textureStyle === "fade") {
+          const softness = state.textureAmount / 100;
+          r = lerp(r, 42 + r * .84, softness * .28);
+          g = lerp(g, 44 + g * .85, softness * .28);
+          b = lerp(b, 46 + b * .87, softness * .28);
         }
 
         if (vignette > 0) {
@@ -1618,6 +1811,11 @@
         data[i + 2] = clamp(b);
       }
       return imageData;
+    }
+
+    function seededNoise(x, y, seed) {
+      const value = Math.sin(x * 12.9898 + y * 78.233 + seed * .013) * 43758.5453;
+      return value - Math.floor(value);
     }
 
     function formatStampTime(date) {
@@ -1659,7 +1857,7 @@
       return `${date}${timeText}${state.stampText.trim() ? " " + state.stampText.trim().toUpperCase() : ""}`;
     }
 
-    function drawDateStamp(targetCtx, width, height) {
+    function drawDateStamp(targetCtx, width, height, bounds = { x: 0, y: 0, width, height }) {
       if (!state.stampEnabled) return;
       const text = stampDateText();
       const size = Math.round(Math.max(16, Math.min(width / 11, state.stamp.stampSize * (width / previewCanvas.width || 1))));
@@ -1675,11 +1873,11 @@
       targetCtx.shadowBlur = state.stamp.stampGlow;
 
       const metrics = targetCtx.measureText(text);
-      let x = margin;
-      let y = height - margin;
-      if (state.stampPosition.includes("right")) x = width - margin - metrics.width;
-      if (state.stampPosition.includes("top")) y = margin + size;
-      if (state.stampPosition === "center-bottom") x = (width - metrics.width) / 2;
+      let x = bounds.x + margin;
+      let y = bounds.y + bounds.height - margin;
+      if (state.stampPosition.includes("right")) x = bounds.x + bounds.width - margin - metrics.width;
+      if (state.stampPosition.includes("top")) y = bounds.y + margin + size;
+      if (state.stampPosition === "center-bottom") x = bounds.x + (bounds.width - metrics.width) / 2;
 
       for (let i = 0; i < state.stamp.stampWeight; i++) {
         targetCtx.strokeText(text, x, y);
@@ -1688,14 +1886,75 @@
       targetCtx.restore();
     }
 
+    function getCropRect() {
+      const sourceRatio = sourceCanvas.width / sourceCanvas.height;
+      const size = printSizes[state.printSize] || printSizes.original;
+      if (!size.ratio) return { x: 0, y: 0, width: sourceCanvas.width, height: sourceCanvas.height };
+      const targetRatio = sourceRatio >= 1 ? 1 / size.ratio : size.ratio;
+      let width = sourceCanvas.width;
+      let height = width / targetRatio;
+      if (height > sourceCanvas.height) {
+        height = sourceCanvas.height;
+        width = height * targetRatio;
+      }
+      const zoom = state.cropZoom / 100;
+      width /= zoom;
+      height /= zoom;
+      return {
+        x: (sourceCanvas.width - width) * (state.cropX / 100),
+        y: (sourceCanvas.height - height) * (state.cropY / 100),
+        width,
+        height,
+      };
+    }
+
+    function getPrintDimensions() {
+      const crop = state.imageLoaded ? getCropRect() : { width: 2, height: 3 };
+      const size = printSizes[state.printSize] || printSizes.original;
+      if (!size.shortEdge) return { width: Math.round(crop.width), height: Math.round(crop.height) };
+      const shortEdge = size.shortEdge;
+      const longEdge = Math.round(shortEdge / size.ratio);
+      return crop.width >= crop.height ? { width: longEdge, height: shortEdge } : { width: shortEdge, height: longEdge };
+    }
+
+    function composeBorder(canvas) {
+      if (state.borderStyle === "none") return { canvas, bounds: { x: 0, y: 0, width: canvas.width, height: canvas.height } };
+      const framed = document.createElement("canvas");
+      framed.width = canvas.width;
+      framed.height = canvas.height;
+      const framedCtx = framed.getContext("2d");
+      const inset = Math.round(Math.min(framed.width, framed.height) * (state.borderStyle === "film35" ? .075 : .038));
+      framedCtx.fillStyle = state.borderStyle === "white" ? "#f6f1e4" : "#0b0c0d";
+      framedCtx.fillRect(0, 0, framed.width, framed.height);
+      const bounds = { x: inset, y: inset, width: framed.width - inset * 2, height: framed.height - inset * 2 };
+      framedCtx.drawImage(canvas, bounds.x, bounds.y, bounds.width, bounds.height);
+      if (state.borderStyle === "film35") {
+        const hole = Math.max(4, Math.round(inset * .28));
+        const gap = hole * 1.7;
+        framedCtx.fillStyle = "#d6d0c1";
+        for (let y = inset * .22; y < framed.height - inset * .22; y += gap) {
+          framedCtx.fillRect(Math.max(2, inset * .22), y, hole, hole * 1.25);
+          framedCtx.fillRect(framed.width - Math.max(2, inset * .22) - hole, y, hole, hole * 1.25);
+        }
+      }
+      return { canvas: framed, bounds };
+    }
+
     function renderImage() {
       if (!state.imageLoaded) return;
-      previewCanvas.width = sourceCanvas.width;
-      previewCanvas.height = sourceCanvas.height;
-      ctx.drawImage(sourceCanvas, 0, 0);
+      const crop = getCropRect();
+      previewCanvas.width = Math.max(1, Math.round(crop.width));
+      previewCanvas.height = Math.max(1, Math.round(crop.height));
+      ctx.drawImage(sourceCanvas, crop.x, crop.y, crop.width, crop.height, 0, 0, previewCanvas.width, previewCanvas.height);
       const imageData = ctx.getImageData(0, 0, previewCanvas.width, previewCanvas.height);
       ctx.putImageData(applyFilm(imageData), 0, 0);
-      drawDateStamp(ctx, previewCanvas.width, previewCanvas.height);
+      const composed = composeBorder(previewCanvas);
+      if (composed.canvas !== previewCanvas) {
+        previewCanvas.width = composed.canvas.width;
+        previewCanvas.height = composed.canvas.height;
+        ctx.drawImage(composed.canvas, 0, 0);
+      }
+      drawDateStamp(ctx, previewCanvas.width, previewCanvas.height, composed.bounds);
     }
 
     function renderBeforeImage() {
@@ -1714,7 +1973,8 @@
         String(now.getHours()).padStart(2, "0"),
         String(now.getMinutes()).padStart(2, "0"),
       ].join("");
-      return `FOTO-LAB-${looks[state.activeLook].name.replace(/\s+/g, "-").toLowerCase()}-${stamp}.jpg`;
+      const format = state.printSize === "original" ? "original" : state.printSize;
+      return `FOTO-LAB-${looks[state.activeLook].name.replace(/\s+/g, "-").toLowerCase()}-${format}-${stamp}.jpg`;
     }
 
     function getExportSettings() {
@@ -1725,14 +1985,19 @@
       await ensureStampFont();
       const options = getExportSettings();
       const finalCanvas = document.createElement("canvas");
-      finalCanvas.width = Math.max(1, Math.round(sourceCanvas.width * options.scale));
-      finalCanvas.height = Math.max(1, Math.round(sourceCanvas.height * options.scale));
+      const crop = getCropRect();
+      const print = getPrintDimensions();
+      const scale = state.printSize === "original" ? options.scale : 1;
+      finalCanvas.width = Math.max(1, Math.round(print.width * scale));
+      finalCanvas.height = Math.max(1, Math.round(print.height * scale));
       const finalCtx = finalCanvas.getContext("2d", { willReadFrequently: true });
-      finalCtx.drawImage(sourceCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
+      finalCtx.drawImage(sourceCanvas, crop.x, crop.y, crop.width, crop.height, 0, 0, finalCanvas.width, finalCanvas.height);
       const imageData = finalCtx.getImageData(0, 0, finalCanvas.width, finalCanvas.height);
       finalCtx.putImageData(applyFilm(imageData), 0, 0);
-      drawDateStamp(finalCtx, finalCanvas.width, finalCanvas.height);
-      return finalCanvas;
+      const composed = composeBorder(finalCanvas);
+      const composedCtx = composed.canvas.getContext("2d", { willReadFrequently: true });
+      drawDateStamp(composedCtx, composed.canvas.width, composed.canvas.height, composed.bounds);
+      return composed.canvas;
     }
 
     async function createExportBlob() {
@@ -1795,6 +2060,14 @@
         stampText: state.stampText,
         stampColor: state.stampColor,
         stampStyle: state.stampStyle,
+        printSize: state.printSize,
+        cropX: state.cropX,
+        cropY: state.cropY,
+        cropZoom: state.cropZoom,
+        borderStyle: state.borderStyle,
+        textureStyle: state.textureStyle,
+        textureAmount: state.textureAmount,
+        textureSeed: state.textureSeed,
         exportQuality: state.exportQuality,
         activeCategory: state.activeCategory,
         controls: { ...state.controls },
@@ -1952,6 +2225,14 @@
         stampText: settings.stampText || "",
         stampColor: settings.stampColor || "#ff6600",
         stampStyle: ["date", "film", "y2k", "place", "text"].includes(settings.stampStyle) ? settings.stampStyle : "date",
+        printSize: printSizes[settings.printSize] ? settings.printSize : "original",
+        cropX: clamp(Number(settings.cropX ?? 50), 0, 100),
+        cropY: clamp(Number(settings.cropY ?? 50), 0, 100),
+        cropZoom: clamp(Number(settings.cropZoom ?? 100), 100, 180),
+        borderStyle: borderStyles[settings.borderStyle] ? settings.borderStyle : "none",
+        textureStyle: ["off", "fine", "dust", "fade"].includes(settings.textureStyle) ? settings.textureStyle : "off",
+        textureAmount: clamp(Number(settings.textureAmount ?? 28), 0, 100),
+        textureSeed: Number.isFinite(Number(settings.textureSeed)) ? Number(settings.textureSeed) : state.textureSeed,
         exportQuality: settings.exportQuality || (Number(settings.jpegQuality) <= .84 ? "low" : Number(settings.jpegQuality) <= .94 ? "medium" : "maximum"),
         activeCategory: settings.activeCategory || readStorage(LOOK_CATEGORY_KEY) || "all",
       });
@@ -2023,6 +2304,16 @@
     }
 
     importBtn.addEventListener("click", () => fileInput.click());
+    textureStyle.addEventListener("change", () => {
+      commitStateChange(() => { state.textureStyle = textureStyle.value; });
+    });
+    resetCropBtn.addEventListener("click", () => {
+      commitStateChange(() => {
+        state.cropX = 50;
+        state.cropY = 50;
+        state.cropZoom = 100;
+      });
+    });
     languageBtn.addEventListener("click", () => {
       language = language === "en" ? "th" : "en";
       writeStorage(LANGUAGE_KEY, language);
@@ -2037,7 +2328,10 @@
         return;
       }
       renderExportOptions();
-      exportStatus.textContent = "Choose final quality. Your preview is unchanged.";
+      const dimensions = getPrintDimensions();
+      exportStatus.textContent = state.printSize === "original"
+        ? "Original aspect ratio. Your preview is unchanged."
+        : `${printSizeLabel()} · ${dimensions.width} × ${dimensions.height} px${state.borderStyle !== "none" ? ` · ${borderLabel()}` : ""}`;
       exportSheet.classList.remove("hidden");
       refreshIcons();
     }
