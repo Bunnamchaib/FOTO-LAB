@@ -4,19 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#101316">
-  <meta name="description" content="FILM FOTO is a mobile-first retro film simulation editor with local presets and digital date stamps.">
+  <meta name="description" content="FOTO LAB is a mobile-first retro film simulation editor with local presets and digital date stamps.">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="FILM FOTO">
+  <meta name="apple-mobile-web-app-title" content="FOTO LAB">
   <link rel="icon" href="logo.png">
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=DM+Serif+Display:ital@0;1&family=Italiana&family=Orbitron:wght@400;600;800&family=Permanent+Marker&display=swap" rel="stylesheet">
-  <link rel="manifest" href='data:application/manifest+json,{"name":"FILM FOTO","short_name":"FOTO LAB","description":"Retro film simulation editor with local presets and date stamps.","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#101316","theme_color":"#101316","orientation":"portrait","icons":[{"src":"logo.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"FOTO LAB","short_name":"FOTO LAB","description":"FOTO LAB is a retro film simulation editor with local presets and date stamps.","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#101316","theme_color":"#101316","orientation":"portrait","icons":[{"src":"logo.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
-  <title>FILM FOTO</title>
+  <title>FOTO LAB</title>
   <style>
     :root {
       color-scheme: dark;
@@ -760,7 +760,7 @@
   <main class="app">
     <header class="topbar">
       <div class="brand">
-        <strong>FILM FOTO</strong>
+        <strong>FOTO LAB</strong>
         <span>Mobile film lab</span>
       </div>
       <div class="top-actions">
@@ -878,7 +878,7 @@
             </div>
             <div class="field full">
               <label for="stampText" data-i18n="customText">Custom Text</label>
-              <input class="text-input" id="stampText" type="text" maxlength="28" placeholder="FILM FOTO">
+              <input class="text-input" id="stampText" type="text" maxlength="28" placeholder="FOTO LAB">
             </div>
           </div>
           <div class="swatches" id="stampSwatches"></div>
@@ -886,7 +886,7 @@
             <label for="stampStyle" data-i18n="stampStyle">Stamp Style</label>
             <select id="stampStyle">
               <option value="date">Date Only</option>
-              <option value="film">Date + FILM FOTO</option>
+              <option value="film">Date + FOTO LAB</option>
               <option value="y2k">Y2K CAM</option>
               <option value="place">Date + Place</option>
               <option value="text">Text Only</option>
@@ -1634,7 +1634,7 @@
     function stampDateText() {
       const now = new Date();
       const timeText = state.stampIncludeTime ? ` ${resolveStampTime(now)}` : "";
-      if (state.stampStyle === "text") return `${state.stampText.trim().toUpperCase() || "FILM FOTO"}${timeText}`;
+      if (state.stampStyle === "text") return `${state.stampText.trim().toUpperCase() || "FOTO LAB"}${timeText}`;
       let year = now.getFullYear();
       let month = now.getMonth() + 1;
       let day = now.getDate();
@@ -1714,7 +1714,7 @@
         String(now.getHours()).padStart(2, "0"),
         String(now.getMinutes()).padStart(2, "0"),
       ].join("");
-      return `FILM-FOTO-${looks[state.activeLook].name.replace(/\s+/g, "-").toLowerCase()}-${stamp}.jpg`;
+      return `FOTO-LAB-${looks[state.activeLook].name.replace(/\s+/g, "-").toLowerCase()}-${stamp}.jpg`;
     }
 
     function getExportSettings() {
@@ -2287,7 +2287,7 @@
         state.stampColor = style === "y2k" ? "#66e6ff" : "#ff6600";
         state.stamp.stampOpacity = style === "date" ? 30 : 94;
         state.stamp.stampGlow = style === "y2k" ? 22 : 4;
-        state.stampText = { date: "", film: "FILM FOTO", y2k: "Y2K CAM", place: "BKK", text: state.stampText || "FILM FOTO" }[style] || "";
+        state.stampText = { date: "", film: "FOTO LAB", y2k: "Y2K CAM", place: "BKK", text: state.stampText || "FOTO LAB" }[style] || "";
       });
       ensureStampFont().then(renderImage);
     });
